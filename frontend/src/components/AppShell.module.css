@@ -1,0 +1,2 @@
+.app{min-height:100vh;background:#f8fafc}.layout{min-height:100vh;display:flex}.main{flex:1;min-width:0}
+@media(max-width:800px){.layout{min-height:calc(100vh - 64px)}}

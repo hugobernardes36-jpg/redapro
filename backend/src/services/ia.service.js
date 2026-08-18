@@ -63,27 +63,37 @@ A justificativa deve estar relacionada diretamente ao texto analisado.
 Retorne SOMENTE um JSON válido seguindo exatamente esta estrutura:
 
 {
-  "competencia1": {
-    "nota": 0,
-    "feedback": ""
-  },
-  "competencia2": {
-    "nota": 0,
-    "feedback": ""
-  },
-  "competencia3": {
-    "nota": 0,
-    "feedback": ""
-  },
-  "competencia4": {
-    "nota": 0,
-    "feedback": ""
-  },
-  "competencia5": {
-    "nota": 0,
-    "feedback": ""
-  },
-  "feedbackGeral": ""
+     "competencia1": {
+       "nota": 0,
+       "pontosPositivos": [],
+       "pontosNegativos": [],
+       "feedback": ""
+     },
+     "competencia2": {
+       "nota": 0,
+       "pontosPositivos": [],
+       "pontosNegativos": [],
+       "feedback": ""
+     },
+     "competencia3": {
+       "nota": 0,
+       "pontosPositivos": [],
+       "pontosNegativos": [],
+       "feedback": ""
+     },
+     "competencia4": {
+       "nota": 0,
+       "pontosPositivos": [],
+       "pontosNegativos": [],
+       "feedback": ""
+     },
+     "competencia5": {
+       "nota": 0,
+       "pontosPositivos": [],
+       "pontosNegativos": [],
+       "feedback": ""
+     },
+     "feedbackGeral": ""
 }
 `
             },

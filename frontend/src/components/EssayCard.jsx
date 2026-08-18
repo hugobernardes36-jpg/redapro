@@ -1,0 +1,3 @@
+import { Icon } from './Icon'
+import styles from './EssayCard.module.css'
+export function EssayCard({essay}){return <article className={styles.card}><div className={`${styles.icon} ${styles[essay.tone]}`}><Icon name="file" size={20}/></div><div className={styles.content}><h2>{essay.title}</h2><div className={styles.meta}><span>{essay.date}</span><span>•</span><span className={styles.status}>Corrigido</span></div></div><div className={styles.score}><strong>{essay.score}</strong><span>/1000</span></div><button className={styles.open} type="button" aria-label="Abrir redação"><Icon name="chevron" size={18}/></button></article>}

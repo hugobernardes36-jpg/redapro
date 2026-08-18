@@ -45,8 +45,10 @@ model Correcao {
   competencia5   Int
 
   notaFinal      Int
-
-  feedback       String   @db.Text
+  status         String   @default("PENDENTE")
+  motivo         String?  @db.Text
+  feedback       String?  @db.Text
+  dadosIa        Json?
 
   createdAt      DateTime @default(now())
 

@@ -108,38 +108,99 @@ function validarPontuacao(correcao) {
     return true;
 }
 
+function mapearMotivoHumano(motivo) {
+    const mensagens = {
+        'Redação em branco.': 'A redação está em branco.',
+        'Texto da redação não informado.': 'A redação não foi informada corretamente.',
+        'Texto muito curto para uma redação do ENEM.': 'A redação está muito curta para ser avaliada.',
+        fuga_ao_tema: 'A redação fugiu do tema proposto.',
+        texto_sem_sentido: 'O texto não apresenta sentido e coerência suficientes para uma correção.',
+        texto_insuficiente: 'A redação não possui desenvolvimento suficiente para ser corrigida.',
+        nao_dissertativo_argumentativo: 'A redação não tem estrutura dissertativo-argumentativa adequada.',
+        conteudo_inadequado: 'O conteúdo da redação não atende aos critérios mínimos para correção.'
+    };
+
+    return mensagens[motivo] || 'A redação não atende aos critérios mínimos para correção.';
+}
+
+async function salvarCorrecao(redacaoId, payload) {
+    const dadosIa = payload.dadosIa || payload;
+    const motivoHumano = payload.motivoHumano || mapearMotivoHumano(payload.motivo);
+    const base = {
+        redacaoId: Number(redacaoId),
+        status: payload.status || 'CORRIGIDA',
+        notaFinal: Number(payload.notaFinal ?? 0),
+        motivo: payload.motivo || null,
+        feedback: payload.feedbackGeral || payload.feedback || '',
+        dadosIa: {
+            ...(dadosIa && typeof dadosIa === 'object' ? dadosIa : {}),
+            motivoHumano,
+            status: payload.status || 'CORRIGIDA',
+            notaFinal: Number(payload.notaFinal ?? 0)
+        },
+        competencia1: Number(dadosIa?.competencia1?.nota ?? payload.competencia1?.nota ?? 0),
+        competencia2: Number(dadosIa?.competencia2?.nota ?? payload.competencia2?.nota ?? 0),
+        competencia3: Number(dadosIa?.competencia3?.nota ?? payload.competencia3?.nota ?? 0),
+        competencia4: Number(dadosIa?.competencia4?.nota ?? payload.competencia4?.nota ?? 0),
+        competencia5: Number(dadosIa?.competencia5?.nota ?? payload.competencia5?.nota ?? 0),
+    };
+
+    const { redacaoId: _, ...persistData } = base;
+    const existing = await prisma.correcao.findUnique({
+        where: { redacaoId: Number(redacaoId) }
+    });
+
+    if (existing) {
+        return prisma.correcao.update({
+            where: { id: existing.id },
+            data: persistData,
+        });
+    }
+
+    return prisma.correcao.create({
+        data: {
+            ...persistData,
+            redacaoId: Number(redacaoId),
+        },
+    });
+}
+
 async function executarCorrecao(redacaoId) {
     const redacao = await buscarRedacao(redacaoId);
-
-    // ==========================================
-    // 1. TRIAGEM BÁSICA
-    // ==========================================
 
     const textoBasico = verificarTextoBasico(redacao.texto);
 
     if (!textoBasico.valido) {
-        return {
+        const resultado = {
             redacaoId: redacao.id,
             notaFinal: 0,
             status: 'NAO_APTA',
-            motivo: textoBasico.motivo
+            motivo: textoBasico.motivo,
+            motivoHumano: mapearMotivoHumano(textoBasico.motivo),
+            feedbackGeral: mapearMotivoHumano(textoBasico.motivo),
+            explicacao: mapearMotivoHumano(textoBasico.motivo),
         };
+
+        await salvarCorrecao(redacao.id, resultado);
+        return resultado;
     }
 
     const tamanhoTexto = verificarTamanhoTexto(redacao.texto);
 
     if (!tamanhoTexto.valido) {
-        return {
+        const resultado = {
             redacaoId: redacao.id,
             notaFinal: 0,
             status: 'NAO_APTA',
-            motivo: tamanhoTexto.motivo
+            motivo: tamanhoTexto.motivo,
+            motivoHumano: mapearMotivoHumano(tamanhoTexto.motivo),
+            feedbackGeral: mapearMotivoHumano(tamanhoTexto.motivo),
+            explicacao: mapearMotivoHumano(tamanhoTexto.motivo),
         };
-    }
 
-    // ==========================================
-    // 2. TRIAGEM COM IA
-    // ==========================================
+        await salvarCorrecao(redacao.id, resultado);
+        return resultado;
+    }
 
     const triagem = await analisarTriagem({
         tema: redacao.tema,
@@ -147,53 +208,51 @@ async function executarCorrecao(redacaoId) {
     });
 
     if (!triagem.apto) {
-        return {
+        const resultado = {
             redacaoId: redacao.id,
             notaFinal: 0,
             status: 'NAO_APTA',
             motivo: triagem.motivo,
-            explicacao: triagem.explicacao
+            motivoHumano: mapearMotivoHumano(triagem.motivo),
+            feedbackGeral: triagem.explicacao || mapearMotivoHumano(triagem.motivo),
+            explicacao: triagem.explicacao || mapearMotivoHumano(triagem.motivo),
         };
-    }
 
-    // ==========================================
-    // 3. CORREÇÃO COM IA
-    // ==========================================
+        await salvarCorrecao(redacao.id, resultado);
+        return resultado;
+    }
 
     const avaliacao = await corrigirRedacao({
         tema: redacao.tema,
         texto: redacao.texto
     });
 
-    // ==========================================
-    // 4. VALIDAÇÃO DA PONTUAÇÃO
-    // ==========================================
-
     if (!validarPontuacao(avaliacao)) {
         throw new Error('A avaliação da IA possui pontuação inválida');
     }
 
-    // ==========================================
-    // 5. CÁLCULO DA NOTA FINAL
-    // ==========================================
-
     const notaFinal = calcularNotaFinal(avaliacao);
-
-    return {
+    const resultado = {
         redacaoId: redacao.id,
         status: 'CORRIGIDA',
-
         competencia1: avaliacao.competencia1,
         competencia2: avaliacao.competencia2,
         competencia3: avaliacao.competencia3,
         competencia4: avaliacao.competencia4,
         competencia5: avaliacao.competencia5,
-
         notaFinal,
+        feedbackGeral: avaliacao.feedbackGeral,
+        dadosIa: avaliacao,
+    };
 
-        feedbackGeral: avaliacao.feedbackGeral
+    const correcaoSalva = await salvarCorrecao(redacao.id, resultado);
+
+    return {
+        ...resultado,
+        correcaoId: correcaoSalva.id,
     };
 }
+
 module.exports = {
     buscarRedacao,
     prepararCorrecao,
