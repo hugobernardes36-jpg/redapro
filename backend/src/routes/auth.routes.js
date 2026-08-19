@@ -5,6 +5,7 @@ const {
     registrar,
     login,
     loginGoogle,
+    csrf,
     logout,
     me,
     verificarEmail,
@@ -23,6 +24,8 @@ router.post('/google', authRateLimiter, loginGoogle);
 router.post('/esqueci-senha', authRateLimiter, esqueciSenha);
 router.post('/redefinir-senha', authRateLimiter, redefinirSenha);
 router.post('/verificar-email', authRateLimiter, verificarEmail);
+
+router.get('/csrf', csrf);
 
 router.post('/logout', csrfProtection, logout);
 router.get('/me', requireAuth, me);

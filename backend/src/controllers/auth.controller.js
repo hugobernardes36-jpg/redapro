@@ -33,6 +33,12 @@ function limparCookiesSessao(res) {
     res.clearCookie(CSRF_COOKIE_NAME, { ...CSRF_COOKIE_OPTIONS, maxAge: undefined });
 }
 
+function csrf(req, res) {
+    const token = req.cookies?.[CSRF_COOKIE_NAME] || crypto.randomBytes(24).toString('hex');
+    res.cookie(CSRF_COOKIE_NAME, token, CSRF_COOKIE_OPTIONS);
+    return res.status(200).json({ token });
+}
+
 async function registrar(req, res) {
     try {
         const validacao = validarCadastro(req.body || {});
@@ -187,6 +193,7 @@ module.exports = {
     registrar,
     login,
     loginGoogle,
+    csrf,
     logout,
     me,
     verificarEmail,
