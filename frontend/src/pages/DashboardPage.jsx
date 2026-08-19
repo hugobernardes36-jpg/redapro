@@ -3,8 +3,9 @@ import { Icon } from '../components/ui/Icon'
 import { Button } from '../components/ui/Button'
 import { PageContainer } from '../components/ui/PageContainer'
 import { EssayCard } from '../components/essay/EssayCard'
+import { EmailVerificationBanner } from '../components/EmailVerificationBanner'
 import { listarRedacoes, obterEstatisticas } from '../services/redacoes'
-import { getCurrentUser } from '../services/session'
+import { useAuth } from '../context/AuthContext'
 import styles from './DashboardPage.module.css'
 
 const TONES = ['blue', 'green', 'amber', 'purple']
@@ -26,16 +27,15 @@ export function DashboardPage({ navigate, onSelectEssay }) {
   const [stats, setStats] = useState({ averageScore: 0, essaysCount: 0, correctedCount: 0, lastScore: 0, bestScore: 0 })
   const [essays, setEssays] = useState([])
   const [loading, setLoading] = useState(true)
-  const currentUser = getCurrentUser()
-  const displayName = currentUser.email ? currentUser.email.split('@')[0].replace(/[._-]/g, ' ').trim() || 'Usuário' : 'Usuário'
+  const { user } = useAuth()
+  const displayName = user?.name?.split(' ')[0] || (user?.email ? user.email.split('@')[0].replace(/[._-]/g, ' ').trim() : 'Usuário') || 'Usuário'
 
   useEffect(() => {
     async function load() {
       try {
-        const userId = currentUser.id
         const [statsData, essaysData] = await Promise.all([
-          obterEstatisticas(userId),
-          listarRedacoes(userId)
+          obterEstatisticas(),
+          listarRedacoes()
         ])
         setStats(statsData)
         setEssays(essaysData)
@@ -46,7 +46,7 @@ export function DashboardPage({ navigate, onSelectEssay }) {
       }
     }
     load()
-  }, [currentUser.id])
+  }, [])
 
   const essayCards = essays.slice(0, 3).map((e, i) => ({
     id: e.id,
@@ -60,6 +60,7 @@ export function DashboardPage({ navigate, onSelectEssay }) {
   const level = getLevel(stats.averageScore)
 
   return <PageContainer wide>
+    <EmailVerificationBanner />
     <section className={styles.welcome}><div><span className={styles.kicker}>INÍCIO</span><h1>Olá, {displayName}! 👋</h1><p>Continue praticando. Sua próxima redação pode ser a sua melhor.</p></div><div className={styles.level}><span>Nível atual</span><strong>{level}</strong><small>{stats.essaysCount > 0 ? `${stats.correctedCount} redações corrigidas` : 'Escreva sua primeira redação'}</small></div></section>
     <section className={styles.cta}><div className={styles.ctaIcon}><Icon name="edit" size={24}/></div><div><span>PRONTO PARA PRATICAR?</span><h2>Escreva uma nova redação</h2><p>Escolha um tema e coloque suas ideias no papel.</p></div><Button size="lg" onClick={()=>navigate('/nova-redacao')}>Nova Redação <Icon name="arrowRight" size={16}/></Button></section>
     <section className={styles.stats}>{[['Média das notas',stats.averageScore,'chart'],['Redações feitas',stats.essaysCount,'file'],['Última nota',stats.lastScore,'check'],['Melhor nota',stats.bestScore,'spark']].map(([label,value,icon])=><article key={label}><div className={styles.statIcon}><Icon name={icon} size={17}/></div><div><strong>{value}</strong><span>{label}</span></div></article>)}</section>

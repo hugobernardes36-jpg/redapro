@@ -6,7 +6,6 @@ import { Icon } from '../components/ui/Icon'
 import { Button } from '../components/ui/Button'
 import { EssayCard } from '../components/essay/EssayCard'
 import { listarRedacoes } from '../services/redacoes'
-import { getCurrentUserId } from '../services/session'
 import styles from './EssaysPage.module.css'
 
 const TONES = ['blue', 'green', 'amber', 'purple']
@@ -24,7 +23,7 @@ export function EssaysPage({ navigate, onSelectEssay }) {
   useEffect(() => {
     async function load() {
       try {
-        const data = await listarRedacoes(getCurrentUserId())
+        const data = await listarRedacoes()
         setEssays(data)
       } catch (err) {
         console.error('Erro ao carregar redações:', err)

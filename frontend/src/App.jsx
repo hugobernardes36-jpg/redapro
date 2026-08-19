@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from './components/layout/AppShell'
 import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { NewEssayPage } from './pages/NewEssayPage'
 import { ResultPage } from './pages/ResultPage'
@@ -8,16 +12,25 @@ import { EssaysPage } from './pages/EssaysPage'
 import { EssayDetailsPage } from './pages/EssayDetailsPage'
 import { ThemesPage } from './pages/ThemesPage'
 import { ProfilePage } from './pages/ProfilePage'
-import { clearCurrentUser, isAuthenticated, setCurrentUser } from './services/session'
+import { useAuth } from './context/AuthContext'
 
 const routes = {
   '/login': LoginPage,
+  '/cadastro': RegisterPage,
   '/inicio': DashboardPage,
   '/nova-redacao': NewEssayPage,
   '/resultado': ResultPage,
   '/minhas-redacoes': EssaysPage,
   '/temas': ThemesPage,
   '/perfil': ProfilePage,
+}
+
+const PUBLIC_ROUTES = new Set(['/login', '/cadastro'])
+// Acessíveis independentemente do usuário estar autenticado (ex.: link clicado a partir de um e-mail).
+const ALWAYS_ACCESSIBLE_ROUTES = {
+  '/esqueci-senha': ForgotPasswordPage,
+  '/redefinir-senha': ResetPasswordPage,
+  '/verificar-email': VerifyEmailPage,
 }
 
 function getEssayIdFromPath(pathname) {
@@ -67,28 +80,31 @@ export default function App() {
  const router = useRouter()
  const [selectedEssayId, setSelectedEssayId] = useState(null)
  const [correctionResult, setCorrectionResult] = useState(null)
- const [sessionTick, setSessionTick] = useState(0)
+ const { isAuthenticated, loading, logout } = useAuth()
 
- const handleLogin = (user = {}) => {
-   setCurrentUser(user)
-   setSessionTick(current => current + 1)
-   router.navigate('/inicio')
- }
-
- const handleLogout = () => {
-   clearCurrentUser()
-   setSessionTick(current => current + 1)
+ const handleLogout = async () => {
+   await logout()
    router.navigate('/login')
  }
 
- const loggedIn = isAuthenticated()
-
- if (router.path === '/login') {
-   return loggedIn ? <DashboardPage navigate={router.navigate} onSelectEssay={setSelectedEssayId} /> : <LoginPage onLogin={handleLogin} />
+ if (loading) {
+   return null
  }
 
- if (!loggedIn) {
-   return <LoginPage onLogin={handleLogin} />
+ const AlwaysAccessiblePage = ALWAYS_ACCESSIBLE_ROUTES[router.path]
+ if (AlwaysAccessiblePage) {
+   return <AlwaysAccessiblePage navigate={router.navigate} />
+ }
+
+ if (!isAuthenticated) {
+   if (router.path === '/cadastro') {
+     return <RegisterPage navigate={router.navigate} />
+   }
+   return <LoginPage navigate={router.navigate} />
+ }
+
+ if (PUBLIC_ROUTES.has(router.path)) {
+   return <DashboardPage navigate={router.navigate} onSelectEssay={setSelectedEssayId} />
  }
 
  const isEssayDetailRoute = router.path === '/redacao' || router.path.startsWith('/redacao/')

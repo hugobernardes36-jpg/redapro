@@ -1,0 +1,4 @@
+.banner{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;border-radius:8px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px}
+.banner span{flex:1}
+.banner button{border:0;background:transparent;color:#92400e;font-weight:700;text-decoration:underline;cursor:pointer;font-size:12px;white-space:nowrap}
+.banner button:disabled{opacity:.6;cursor:default}

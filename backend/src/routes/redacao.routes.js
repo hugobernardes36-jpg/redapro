@@ -13,30 +13,49 @@ const {
     executarCorrecao
 } = require('../services/correcao.service');
 
-// GET /api/redacoes?userId=1 — listar redações do usuário
+const { requireAuth } = require('../middlewares/auth.middleware');
+const { csrfProtection } = require('../middlewares/csrf.middleware');
+const { aiRateLimiterPerUser, aiRateLimiterPerIp } = require('../middlewares/rateLimit.middleware');
+
+// Todas as rotas de redação exigem um usuário autenticado + token CSRF válido para métodos de escrita.
+router.use(requireAuth);
+router.use(csrfProtection);
+
+// GET /api/redacoes — listar redações do usuário autenticado
 router.get('/', listarRedacoes);
 
-// GET /api/redacoes/stats/:userId — estatísticas do dashboard
-router.get('/stats/:userId', obterEstatisticas);
+// GET /api/redacoes/stats — estatísticas do dashboard do usuário autenticado
+router.get('/stats', obterEstatisticas);
 
-// GET /api/redacoes/:id — buscar redação por ID
+// GET /api/redacoes/:id — buscar redação por ID (somente se pertencer ao usuário autenticado)
 router.get('/:id', buscarRedacao);
 
-// POST /api/redacoes — criar nova redação
-router.post('/', criarRedacao);
+// POST /api/redacoes — criar nova redação vinculada ao usuário autenticado
+router.post('/', aiRateLimiterPerUser, aiRateLimiterPerIp, criarRedacao);
 
-// POST /api/redacoes/:id/corrigir — corrigir redação com IA
-router.post('/:id/corrigir', async (req, res) => {
+// POST /api/redacoes/:id/corrigir — corrigir redação com IA (protegida por rate limit + cota diária)
+router.post('/:id/corrigir', aiRateLimiterPerUser, aiRateLimiterPerIp, async (req, res) => {
     try {
-        const resultado = await executarCorrecao(req.params.id);
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(404).json({ erro: 'Redação não encontrada' });
+        }
+
+        // Propriedade da redação e cota diária são verificadas dentro do service (anti-IDOR).
+        const resultado = await executarCorrecao(id, req.user.id);
 
         return res.status(200).json(resultado);
 
     } catch (error) {
+        if (error.status) {
+            return res.status(error.status).json({ erro: error.message });
+        }
+
         console.error(error);
 
         return res.status(500).json({
-            erro: error.message
+            erro: 'Erro ao corrigir redação'
         });
     }
 });

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './api'
+import { apiFetch } from './api'
 
 function mapearMotivoHumano(motivo) {
   const mensagens = {
@@ -15,11 +15,11 @@ function mapearMotivoHumano(motivo) {
   return mensagens[motivo] || 'A redação não atende aos critérios mínimos para correção.'
 }
 
-export async function criarRedacao({ userId, tema, texto }) {
-  const response = await fetch(`${API_BASE_URL}/api/redacoes`, {
+// O usuário é identificado pelo backend via cookie de sessão; nunca enviamos userId a partir do frontend.
+export async function criarRedacao({ tema, texto }) {
+  const response = await apiFetch('/api/redacoes', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, tema, texto }),
+    body: JSON.stringify({ tema, texto }),
   })
 
   if (!response.ok) {
@@ -31,9 +31,8 @@ export async function criarRedacao({ userId, tema, texto }) {
 }
 
 export async function corrigirRedacao(id) {
-  const response = await fetch(`${API_BASE_URL}/api/redacoes/${id}/corrigir`, {
+  const response = await apiFetch(`/api/redacoes/${id}/corrigir`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   })
 
   const payload = await response.json().catch(() => null)
@@ -49,8 +48,8 @@ export async function corrigirRedacao(id) {
   return payload
 }
 
-export async function listarRedacoes(userId) {
-  const response = await fetch(`${API_BASE_URL}/api/redacoes?userId=${userId}`)
+export async function listarRedacoes() {
+  const response = await apiFetch('/api/redacoes')
 
   if (!response.ok) {
     const erro = await response.json().catch(() => null)
@@ -61,7 +60,7 @@ export async function listarRedacoes(userId) {
 }
 
 export async function buscarRedacao(id) {
-  const response = await fetch(`${API_BASE_URL}/api/redacoes/${id}`)
+  const response = await apiFetch(`/api/redacoes/${id}`)
 
   if (!response.ok) {
     const erro = await response.json().catch(() => null)
@@ -71,8 +70,8 @@ export async function buscarRedacao(id) {
   return response.json()
 }
 
-export async function obterEstatisticas(userId) {
-  const response = await fetch(`${API_BASE_URL}/api/redacoes/stats/${userId}`)
+export async function obterEstatisticas() {
+  const response = await apiFetch('/api/redacoes/stats')
 
   if (!response.ok) {
     const erro = await response.json().catch(() => null)

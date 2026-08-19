@@ -5,7 +5,6 @@ import { PageContainer } from '../components/ui/PageContainer'
 import { EssayEditor } from '../components/essay/EssayEditor'
 import { Icon } from '../components/ui/Icon'
 import { criarRedacao, corrigirRedacao } from '../services/redacoes'
-import { getCurrentUserId } from '../services/session'
 import styles from './NewEssayPage.module.css'
 
 export function NewEssayPage({ navigate, setCorrectionResult }) {
@@ -18,7 +17,6 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
     setEnviando(true)
     try {
       const redacao = await criarRedacao({
-        userId: getCurrentUserId(),
         tema: title,
         texto: text,
       })

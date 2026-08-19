@@ -10,15 +10,21 @@ const {
     verificarTamanhoTexto
 } = require('./triagem.service');
 
-async function buscarRedacao(redacaoId) {
+const { consumirCotaDiaria } = require('./aiUsage.service');
+
+// Busca a redação e, quando um userId é informado, garante que ela pertence a esse usuário.
+// Essa checagem fica dentro do service para proteger qualquer chamador atual ou futuro (anti-IDOR).
+async function buscarRedacao(redacaoId, userId) {
     const redacao = await prisma.redacao.findUnique({
         where: {
             id: Number(redacaoId)
         }
     });
 
-    if (!redacao) {
-        throw new Error('Redação não encontrada');
+    if (!redacao || (userId !== undefined && redacao.userId !== userId)) {
+        const erro = new Error('Redação não encontrada');
+        erro.status = 404;
+        throw erro;
     }
 
     return redacao;
@@ -165,8 +171,8 @@ async function salvarCorrecao(redacaoId, payload) {
     });
 }
 
-async function executarCorrecao(redacaoId) {
-    const redacao = await buscarRedacao(redacaoId);
+async function executarCorrecao(redacaoId, userId) {
+    const redacao = await buscarRedacao(redacaoId, userId);
 
     const textoBasico = verificarTextoBasico(redacao.texto);
 
@@ -200,6 +206,14 @@ async function executarCorrecao(redacaoId) {
 
         await salvarCorrecao(redacao.id, resultado);
         return resultado;
+    }
+
+    // A partir daqui há uma chamada real à OpenAI, portanto consome a cota diária do usuário.
+    const cotaDisponivel = await consumirCotaDiaria(userId);
+    if (!cotaDisponivel) {
+        const erro = new Error('Você atingiu o limite diário de correções. Tente novamente amanhã.');
+        erro.status = 429;
+        throw erro;
     }
 
     const triagem = await analisarTriagem({

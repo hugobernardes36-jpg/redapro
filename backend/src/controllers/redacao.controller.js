@@ -21,26 +21,22 @@ function normalizarCorrecao(correcao) {
 
 async function criarRedacao(req, res) {
     try {
-        const { userId, tema, texto } = req.body;
+        const { tema, texto } = req.body;
+        // O userId nunca é aceito do cliente: vem exclusivamente da sessão autenticada.
+        const userId = req.user.id;
 
         const validacao = validarRedacao({ tema, texto });
 
-if (!validacao.valida) {
-    return res.status(400).json({
-        erro: 'Redação inválida',
-        detalhes: validacao.erros
-    });
-}
-
-        if (!userId || !tema || !texto) {
+        if (!validacao.valida) {
             return res.status(400).json({
-                erro: 'userId, tema e texto são obrigatórios'
+                erro: 'Redação inválida',
+                detalhes: validacao.erros
             });
         }
 
         const redacao = await prisma.redacao.create({
             data: {
-                userId: Number(userId),
+                userId,
                 tema,
                 texto
             }
@@ -59,13 +55,8 @@ if (!validacao.valida) {
 
 async function listarRedacoes(req, res) {
     try {
-        const userId = Number(req.query.userId);
-
-        if (!userId) {
-            return res.status(400).json({
-                erro: 'userId é obrigatório'
-            });
-        }
+        // Sempre filtra pelo usuário autenticado; nunca aceita userId vindo do cliente.
+        const userId = req.user.id;
 
         const redacoes = await prisma.redacao.findMany({
             where: { userId },
@@ -98,6 +89,12 @@ async function buscarRedacao(req, res) {
     try {
         const id = Number(req.params.id);
 
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(404).json({
+                erro: 'Redação não encontrada'
+            });
+        }
+
         const redacao = await prisma.redacao.findUnique({
             where: { id },
             include: {
@@ -106,7 +103,9 @@ async function buscarRedacao(req, res) {
             }
         });
 
-        if (!redacao) {
+        // Retorna 404 tanto para redação inexistente quanto para redação de outro usuário,
+        // evitando revelar a existência de IDs que não pertencem ao solicitante (anti-IDOR).
+        if (!redacao || redacao.userId !== req.user.id) {
             return res.status(404).json({
                 erro: 'Redação não encontrada'
             });
@@ -136,13 +135,8 @@ async function buscarRedacao(req, res) {
 
 async function obterEstatisticas(req, res) {
     try {
-        const userId = Number(req.params.userId);
-
-        if (!userId) {
-            return res.status(400).json({
-                erro: 'userId é obrigatório'
-            });
-        }
+        // Estatísticas sempre restritas ao usuário autenticado.
+        const userId = req.user.id;
 
         const redacoes = await prisma.redacao.findMany({
             where: { userId },

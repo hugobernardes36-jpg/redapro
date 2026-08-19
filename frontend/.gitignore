@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (VITE_* values are public, but keep local overrides out of version control)
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
