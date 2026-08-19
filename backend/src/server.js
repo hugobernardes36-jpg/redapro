@@ -7,6 +7,8 @@ const redacaoRoutes = require('./routes/redacao.routes');
 const authRoutes = require('./routes/auth.routes');
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Somente as origens explicitamente permitidas podem enviar cookies de sessão.
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
