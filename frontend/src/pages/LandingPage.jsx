@@ -227,23 +227,85 @@ export function LandingPage({ navigate }) {
             <h2>Veja como fica a sua avaliação.</h2>
           </div>
 
-          <div className={styles.demoPanel}>
-            <div className={styles.demoScore}>
-              <span>Nota</span>
-              <strong>920</strong>
+          <div className={styles.resultDemo} aria-label="Exemplo da correção do RedaPro">
+            <div className={styles.resultSummary}>
+              <div className={styles.resultTitle}>Nota final</div>
+              <div className={styles.resultScoreWrap}>
+                <span className={styles.resultScore}>920</span>
+                <span className={styles.resultMax}>/1000</span>
+              </div>
+              <div className={styles.resultBadge}>
+                <span className={styles.resultBadgeIcon}>✓</span>
+                Bom desempenho
+              </div>
             </div>
 
-            <div className={styles.demoBreakdown}>
-              <div><span>C1</span><strong>200</strong></div>
-              <div><span>C2</span><strong>180</strong></div>
-              <div><span>C3</span><strong>180</strong></div>
-              <div><span>C4</span><strong>180</strong></div>
-              <div><span>C5</span><strong>180</strong></div>
+            <div className={styles.resultCompetenciasHeader}>
+              <h3>Competências do ENEM</h3>
+              <p>Entenda como sua redação foi avaliada em cada competência.</p>
             </div>
 
-            <div className={styles.demoFeedback}>
-              <p>Seu texto tem boa argumentação e desenvolvimento do tema.</p>
-              <p>Melhorar a proposta de intervenção pode elevar ainda mais a nota final.</p>
+            <div className={styles.resultCompetencia}>
+              <div className={styles.resultMeta}>
+                <span className={styles.resultChip}>C1</span>
+                <h4>Domínio da modalidade escrita</h4>
+                <strong>160<span>/200</span></strong>
+              </div>
+              <div className={styles.resultBar}>
+                <span style={{ width: '80%' }} />
+              </div>
+              <div className={styles.resultFeedbackBlock}>
+                <p><strong>Pontos positivos</strong></p>
+                <ul>
+                  <li>Registro formal compatível com a modalidade dissertativo-argumentativa.</li>
+                  <li>Parágrafos bem demarcados e vocabulário variado.</li>
+                  <li>Pontuação geral adequada, favorecendo a leitura.</li>
+                </ul>
+                <p><strong>Pontos negativos</strong></p>
+                <ul>
+                  <li>Presença de incoerências gramaticais e de preposição.</li>
+                  <li>Erro ortográfico: «acerca» em vez de «a cerca».</li>
+                  <li>Pontuação inadequada em algumas partes do texto.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className={styles.resultCompetencia}>
+              <div className={styles.resultMeta}>
+                <span className={styles.resultChip}>C2</span>
+                <h4>Compreensão da proposta</h4>
+                <strong>200<span>/200</span></strong>
+              </div>
+              <div className={styles.resultBar}>
+                <span style={{ width: '100%' }} />
+              </div>
+              <div className={styles.resultFeedbackBlock}>
+                <p><strong>Pontos positivos</strong></p>
+                <ul>
+                  <li>Compreensão clara da proposta: aborda perspectivas sobre o envelhecimento na sociedade brasileira.</li>
+                  <li>Articulação interdisciplinar com referências históricas e sociopolíticas.</li>
+                  <li>Desenvolve argumento com exemplos relevantes e contexto adequado.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className={styles.resultCompetencia}>
+              <div className={styles.resultMeta}>
+                <span className={styles.resultChip}>C3</span>
+                <h4>Seleção e organização das informações</h4>
+                <strong>200<span>/200</span></strong>
+              </div>
+              <div className={styles.resultBar}>
+                <span style={{ width: '100%' }} />
+              </div>
+              <div className={styles.resultFeedbackBlock}>
+                <p><strong>Pontos positivos</strong></p>
+                <ul>
+                  <li>Estrutura argumentativa clara e bem organizada.</li>
+                  <li>Uso de fontes e referências para sustentar o ponto de vista.</li>
+                  <li>Conclusão articulada com o tema central.</li>
+                </ul>
+              </div>
             </div>
           </div>
         </section>
@@ -266,6 +328,11 @@ export function LandingPage({ navigate }) {
               <h3>Mais praticidade</h3>
               <p>Escolha um pacote de correções quando quiser treinar com mais frequência.</p>
             </article>
+          </div>
+
+          <div className={styles.trialBlock}>
+            <p className={styles.trialTitle}>Comece grátis</p>
+            <p className={styles.trialText}>3 correções grátis para começar. Depois de utilizar as três correções gratuitas, você pode continuar pagando por correção ou adquirindo pacotes de correções.</p>
           </div>
 
           <p className={styles.pricingNote}>
