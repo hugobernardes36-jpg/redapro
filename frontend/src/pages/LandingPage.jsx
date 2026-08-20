@@ -60,6 +60,7 @@ export function LandingPage({ navigate }) {
 
           <nav className={styles.nav} aria-label="Navegação principal">
             <a href="#como-funciona">Como funciona</a>
+            <a href="#experiencia-correcao">Experiência de correção</a>
             <a href="#competencias">Competências</a>
             <a href="#preco">Preço</a>
           </nav>
@@ -90,7 +91,16 @@ export function LandingPage({ navigate }) {
                 Corrigir minha redação
               </Button>
 
-              <Button variant="secondary" size="lg" onClick={() => navigate('/login')}>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => {
+                  document.getElementById('como-funciona')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  })
+                }}
+              >
                 Como funciona
               </Button>
             </div>
@@ -221,7 +231,7 @@ export function LandingPage({ navigate }) {
           </div>
         </section>
 
-        <section className={`${styles.container} ${styles.section}`}>
+        <section id="experiencia-correcao" className={`${styles.container} ${styles.section}`}>
           <div className={styles.sectionHeader}>
             <span className={styles.eyebrow}>experiência de correção</span>
             <h2>Veja como fica a sua avaliação.</h2>
@@ -265,7 +275,7 @@ export function LandingPage({ navigate }) {
                 <ul>
                   <li>Presença de incoerências gramaticais e de preposição.</li>
                   <li>Erro ortográfico: «acerca» em vez de «a cerca».</li>
-                  <li>Pontuação inadequada em algumas partes do texto.</li>
+                  <li>Algumas passagens têm pontuação inadequada.</li>
                 </ul>
               </div>
             </div>
@@ -284,7 +294,7 @@ export function LandingPage({ navigate }) {
                 <ul>
                   <li>Compreensão clara da proposta: aborda perspectivas sobre o envelhecimento na sociedade brasileira.</li>
                   <li>Articulação interdisciplinar com referências históricas e sociopolíticas.</li>
-                  <li>Desenvolve argumento com exemplos relevantes e contexto adequado.</li>
+                  <li>Desenvolve argumentos com exemplos e contexto adequado.</li>
                 </ul>
               </div>
             </div>
@@ -306,6 +316,55 @@ export function LandingPage({ navigate }) {
                   <li>Conclusão articulada com o tema central.</li>
                 </ul>
               </div>
+            </div>
+
+            <div className={styles.resultCompetencia}>
+              <div className={styles.resultMeta}>
+                <span className={styles.resultChip}>C4</span>
+                <h4>Coesão e mecanismos linguísticos</h4>
+                <strong>160<span>/200</span></strong>
+              </div>
+              <div className={styles.resultBar}>
+                <span style={{ width: '80%' }} />
+              </div>
+              <div className={styles.resultFeedbackBlock}>
+                <p><strong>Pontos positivos</strong></p>
+                <ul>
+                  <li>Emprego adequado de conectores e marcações discursivas.</li>
+                  <li>Vocabulário preciso e repertório bom para a argumentação.</li>
+                </ul>
+                <p><strong>Pontos negativos</strong></p>
+                <ul>
+                  <li>Há alguns erros de concordância e regência.</li>
+                  <li>Alguns períodos ficam mais densos do que o necessário.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className={styles.resultCompetencia}>
+              <div className={styles.resultMeta}>
+                <span className={styles.resultChip}>C5</span>
+                <h4>Proposta de intervenção</h4>
+                <strong>200<span>/200</span></strong>
+              </div>
+              <div className={styles.resultBar}>
+                <span style={{ width: '100%' }} />
+              </div>
+              <div className={styles.resultFeedbackBlock}>
+                <p><strong>Pontos positivos</strong></p>
+                <ul>
+                  <li>Apresenta proposta de intervenção clara e com medidas concretas.</li>
+                  <li>Indicação de ações responsáveis e possíveis de serem aplicadas.</li>
+                  <li>Relaciona a solução com os direitos humanos e a melhoria da qualidade de vida.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className={styles.resultGeneralFeedback}>
+              <h4>Feedback geral</h4>
+              <p>
+                Redação bem estruturada, com bom desenvolvimento temático, argumentação coerente e proposta de intervenção consistente. A nota final reflete um texto sólido, com alguns pequenos ajustes de linguagem que poderiam melhorar ainda mais a fluidez e a precisão da escrita.
+              </p>
             </div>
           </div>
         </section>

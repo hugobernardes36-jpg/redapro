@@ -529,6 +529,24 @@
   margin-bottom: 0;
 }
 
+.resultGeneralFeedback {
+  padding: 18px 22px 22px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(241, 245, 249, 0.7);
+}
+
+.resultGeneralFeedback h4 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.resultGeneralFeedback p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.7;
+}
+
 .trialBlock {
   margin-top: 24px;
   padding: 18px 20px;
