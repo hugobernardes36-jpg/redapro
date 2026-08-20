@@ -12,6 +12,7 @@ import { EssaysPage } from './pages/EssaysPage'
 import { EssayDetailsPage } from './pages/EssayDetailsPage'
 import { ThemesPage } from './pages/ThemesPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { LandingPage } from './pages/LandingPage'
 import { useAuth } from './context/AuthContext'
 
 const routes = {
@@ -25,7 +26,7 @@ const routes = {
   '/perfil': ProfilePage,
 }
 
-const PUBLIC_ROUTES = new Set(['/login', '/cadastro'])
+const PUBLIC_ROUTES = new Set(['/login', '/cadastro', '/'])
 // Acessíveis independentemente do usuário estar autenticado (ex.: link clicado a partir de um e-mail).
 const ALWAYS_ACCESSIBLE_ROUTES = {
   '/esqueci-senha': ForgotPasswordPage,
@@ -45,13 +46,13 @@ function getEssayIdFromPath(pathname) {
 }
 
 function normalizePath(path) {
-  if (!path) return '/inicio'
+  if (!path) return '/'
 
   const parsed = new URL(path, window.location.origin)
   const pathname = parsed.pathname || '/'
   const normalized = pathname.replace(/\/+$/, '') || '/'
 
-  return normalized === '/' ? '/inicio' : normalized
+  return normalized
 }
 
 function useRouter() {
@@ -97,10 +98,16 @@ export default function App() {
  }
 
  if (!isAuthenticated) {
+   if (router.path === '/') {
+     return <LandingPage navigate={router.navigate} />
+   }
    if (router.path === '/cadastro') {
      return <RegisterPage navigate={router.navigate} />
    }
-   return <LoginPage navigate={router.navigate} />
+   if (router.path === '/login') {
+     return <LoginPage navigate={router.navigate} />
+   }
+   return <LandingPage navigate={router.navigate} />
  }
 
  if (PUBLIC_ROUTES.has(router.path)) {
