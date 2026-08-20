@@ -24,7 +24,7 @@ const steps = [
   {
     number: '03',
     title: 'Melhore',
-    text: 'Receba nota, justificativa e feedback para saber o que precisa evoluir.',
+    text: 'Receba nota, justificativa e feedback em cada competência para saber o que precisa evoluir.',
   },
 ]
 
