@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const { clerkMiddleware } = require('@clerk/express');
 require("dotenv").config();
 
 const redacaoRoutes = require('./routes/redacao.routes');
@@ -26,6 +27,7 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
+app.use(clerkMiddleware());
 app.use('/api/auth', authRoutes);
 app.use('/api/redacoes', redacaoRoutes);
 

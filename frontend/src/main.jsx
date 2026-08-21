@@ -1,18 +1,22 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { GoogleOAuthProvider } from '@react-oauth/google'
+import { ClerkProvider } from '@clerk/react'
 import './styles/global.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+if (!clerkPublishableKey) {
+  throw new Error('VITE_CLERK_PUBLISHABLE_KEY não configurada.')
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={googleClientId}>
+    <ClerkProvider publishableKey={clerkPublishableKey}>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </GoogleOAuthProvider>
+    </ClerkProvider>
   </StrictMode>,
 )

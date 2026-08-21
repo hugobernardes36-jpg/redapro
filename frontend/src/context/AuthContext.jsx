@@ -1,89 +1,60 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import * as authService from '../services/auth'
+import { useAuth as useClerkAuth, useUser } from '@clerk/react'
+import { apiFetch, configurarTokenGetter } from '../services/api'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
+  const { isLoaded, isSignedIn, getToken, signOut } = useClerkAuth()
+  const { user: clerkUser } = useUser()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let mounted = true
+    configurarTokenGetter(getToken)
+    return () => configurarTokenGetter(null)
+  }, [getToken])
 
-    authService.obterUsuarioAtual()
-      .then((usuario) => {
-        if (mounted) setUser(usuario)
-      })
-      .catch(() => {
-        if (mounted) setUser(null)
-      })
-      .finally(() => {
-        if (mounted) setLoading(false)
-      })
-
-    return () => {
-      mounted = false
+  useEffect(() => {
+    if (!isLoaded) return
+    if (!isSignedIn) {
+      setUser(null)
+      setLoading(false)
+      return
     }
-  }, [])
 
-  const login = useCallback(async (credenciais) => {
-    const usuario = await authService.login(credenciais)
-    setUser(usuario)
-    return usuario
-  }, [])
+    let mounted = true
+    apiFetch('/api/auth/me')
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (mounted) setUser(data?.usuario || null) })
+      .catch(() => { if (mounted) setUser(null) })
+      .finally(() => { if (mounted) setLoading(false) })
 
-  const registrar = useCallback(async (dados) => {
-    const usuario = await authService.registrar(dados)
-    setUser(usuario)
-    return usuario
-  }, [])
-
-  const loginComGoogle = useCallback(async (idToken) => {
-    const usuario = await authService.loginComGoogle(idToken)
-    setUser(usuario)
-    return usuario
-  }, [])
+    return () => { mounted = false }
+  }, [isLoaded, isSignedIn])
 
   const logout = useCallback(async () => {
     try {
-      await authService.logout()
+      await signOut()
     } finally {
       setUser(null)
     }
-  }, [])
+  }, [signOut])
 
   const reenviarVerificacao = useCallback(async () => {
-    return authService.reenviarVerificacao()
-  }, [])
-
-  const esqueciSenha = useCallback(async (email) => {
-    return authService.esqueciSenha(email)
-  }, [])
-
-  const redefinirSenha = useCallback(async (dados) => {
-    return authService.redefinirSenha(dados)
-  }, [])
-
-  const verificarEmail = useCallback(async (token) => {
-    const resultado = await authService.verificarEmail(token)
-    const usuario = await authService.obterUsuarioAtual()
-    if (usuario) setUser(usuario)
-    return resultado
-  }, [])
+    if (clerkUser?.primaryEmailAddress) {
+      await clerkUser.primaryEmailAddress.prepareVerification({ strategy: 'email_code' })
+    }
+  }, [clerkUser])
 
   const value = useMemo(() => ({
     user,
     loading,
     isAuthenticated: Boolean(user),
-    login,
-    registrar,
-    loginComGoogle,
     logout,
     reenviarVerificacao,
-    esqueciSenha,
-    redefinirSenha,
-    verificarEmail,
-  }), [user, loading, login, registrar, loginComGoogle, logout, reenviarVerificacao, esqueciSenha, redefinirSenha, verificarEmail])
+    clerkUser,
+  }), [user, loading, logout, reenviarVerificacao, clerkUser])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

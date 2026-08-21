@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react'
 import { AppShell } from './components/layout/AppShell'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
-import { ResetPasswordPage } from './pages/ResetPasswordPage'
-import { VerifyEmailPage } from './pages/VerifyEmailPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { NewEssayPage } from './pages/NewEssayPage'
 import { ResultPage } from './pages/ResultPage'
@@ -27,13 +24,6 @@ const routes = {
 }
 
 const PUBLIC_ROUTES = new Set(['/login', '/cadastro', '/'])
-// Acessíveis independentemente do usuário estar autenticado (ex.: link clicado a partir de um e-mail).
-const ALWAYS_ACCESSIBLE_ROUTES = {
-  '/esqueci-senha': ForgotPasswordPage,
-  '/redefinir-senha': ResetPasswordPage,
-  '/verificar-email': VerifyEmailPage,
-}
-
 function getEssayIdFromPath(pathname) {
   const match = pathname.match(/^\/(?:redacao|resultado)\/(\d+)$/)
   if (match) {
@@ -90,11 +80,6 @@ export default function App() {
 
  if (loading) {
    return null
- }
-
- const AlwaysAccessiblePage = ALWAYS_ACCESSIBLE_ROUTES[router.path]
- if (AlwaysAccessiblePage) {
-   return <AlwaysAccessiblePage navigate={router.navigate} />
  }
 
  if (!isAuthenticated) {
