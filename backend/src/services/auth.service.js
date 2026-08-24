@@ -4,7 +4,6 @@ function normalizarEmail(email) {
     return String(email).trim().toLowerCase();
 }
 
-// Nunca inclui password/hash/tokens internos na resposta pública do usuário.
 function paraRespostaPublica(user) {
     return {
         id: user.id,
@@ -15,40 +14,29 @@ function paraRespostaPublica(user) {
     };
 }
 
-async function sincronizarUsuarioClerk({ clerkUserId, email, name, emailVerified = false }) {
-    const emailNormalizado = normalizarEmail(email);
-    const porClerk = await prisma.user.findUnique({ where: { clerkUserId } });
-    if (porClerk) {
-        return prisma.user.update({ where: { id: porClerk.id }, data: { name, emailVerified } });
-    }
-
-    const porEmail = await prisma.user.findUnique({ where: { email: emailNormalizado } });
-    if (porEmail) {
-        if (!emailVerified) {
-            const erro = new Error('Verifique o e-mail da conta Clerk antes de acessar os dados existentes.');
-            erro.status = 409;
-            throw erro;
-        }
-        return prisma.user.update({ where: { id: porEmail.id }, data: { clerkUserId, name, emailVerified } });
-    }
-
-    try {
-        return await prisma.user.create({ data: { clerkUserId, email: emailNormalizado, name, emailVerified } });
-    } catch (error) {
-        if (error.code === 'P2002') {
-            const existente = await prisma.user.findUnique({ where: { clerkUserId } });
-            if (existente) return existente;
-        }
-        throw error;
-    }
+async function buscarUsuarioPorEmail(email) {
+    return prisma.user.findUnique({ where: { email: normalizarEmail(email) } });
 }
 
 async function buscarUsuarioPorId(id) {
     return prisma.user.findUnique({ where: { id: Number(id) } });
 }
 
+async function criarUsuario({ name, email, password }) {
+    return prisma.user.create({
+        data: {
+            name: String(name).trim(),
+            email: normalizarEmail(email),
+            password,
+            emailVerified: false,
+        },
+    });
+}
+
 module.exports = {
-    sincronizarUsuarioClerk,
+    buscarUsuarioPorEmail,
     buscarUsuarioPorId,
+    criarUsuario,
+    normalizarEmail,
     paraRespostaPublica,
 };

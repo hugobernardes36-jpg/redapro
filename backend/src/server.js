@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const { clerkMiddleware } = require('@clerk/express');
 require("dotenv").config();
 
 const redacaoRoutes = require('./routes/redacao.routes');
@@ -9,6 +8,23 @@ const authRoutes = require('./routes/auth.routes');
 const app = express();
 
 app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  res.setHeader('X-Download-Options', 'noopen');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none';"
+  );
+  next();
+});
 
 // Somente as origens explicitamente permitidas podem enviar cookies de sessão.
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
@@ -27,7 +43,6 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
-app.use(clerkMiddleware());
 app.use('/api/auth', authRoutes);
 app.use('/api/redacoes', redacaoRoutes);
 

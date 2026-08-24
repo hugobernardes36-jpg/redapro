@@ -1,60 +1,79 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useAuth as useClerkAuth, useUser } from '@clerk/react'
-import { apiFetch, configurarTokenGetter } from '../services/api'
+import { apiFetch } from '../services/api'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const { isLoaded, isSignedIn, getToken, signOut } = useClerkAuth()
-  const { user: clerkUser } = useUser()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    configurarTokenGetter(getToken)
-    return () => configurarTokenGetter(null)
-  }, [getToken])
+  const carregarUsuario = useCallback(async () => {
+    try {
+      const response = await apiFetch('/api/auth/me')
+      const data = response.ok ? await response.json() : null
+      setUser(data?.usuario || null)
+    } catch {
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    if (!isLoaded) return
-    if (!isSignedIn) {
-      setUser(null)
-      setLoading(false)
-      return
+    carregarUsuario()
+  }, [carregarUsuario])
+
+  const login = useCallback(async (email, password) => {
+    const response = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(data.erro || 'Não foi possível entrar.')
     }
 
-    let mounted = true
-    apiFetch('/api/auth/me')
-      .then((response) => response.ok ? response.json() : null)
-      .then((data) => { if (mounted) setUser(data?.usuario || null) })
-      .catch(() => { if (mounted) setUser(null) })
-      .finally(() => { if (mounted) setLoading(false) })
+    setUser(data.usuario || null)
+    return data
+  }, [])
 
-    return () => { mounted = false }
-  }, [isLoaded, isSignedIn])
+  const register = useCallback(async (name, email, password) => {
+    const response = await apiFetch('/api/auth/registrar', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(data.erro || 'Não foi possível criar a conta.')
+    }
+
+    setUser(data.usuario || null)
+    return data
+  }, [])
 
   const logout = useCallback(async () => {
     try {
-      await signOut()
+      await apiFetch('/api/auth/logout', { method: 'POST' })
     } finally {
       setUser(null)
     }
-  }, [signOut])
+  }, [])
 
   const reenviarVerificacao = useCallback(async () => {
-    if (clerkUser?.primaryEmailAddress) {
-      await clerkUser.primaryEmailAddress.prepareVerification({ strategy: 'email_code' })
-    }
-  }, [clerkUser])
+    return null
+  }, [])
 
   const value = useMemo(() => ({
     user,
     loading,
     isAuthenticated: Boolean(user),
+    login,
+    register,
     logout,
     reenviarVerificacao,
-    clerkUser,
-  }), [user, loading, logout, reenviarVerificacao, clerkUser])
+  }), [user, loading, login, register, logout, reenviarVerificacao])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
