@@ -2,7 +2,15 @@ const jwt = require('jsonwebtoken');
 const authService = require('../services/auth.service');
 
 const SESSION_COOKIE_NAME = 'redapro_session';
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+
+const isProduction = process.env.NODE_ENV === 'production';
+let JWT_SECRET = process.env.JWT_SECRET;
+if (isProduction && !JWT_SECRET) {
+    throw new Error('JWT_SECRET não está definido nas variáveis de ambiente em produção.');
+}
+if (!JWT_SECRET) {
+    JWT_SECRET = 'dev-secret-change-me';
+}
 
 async function requireAuth(req, res, next) {
     try {

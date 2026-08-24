@@ -5,10 +5,68 @@ const OpenAI = require('openai');
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
+
+const NOTAS_COMPETENCIA = [0, 40, 80, 120, 160, 200];
+
+const CORRECAO_JSON_SCHEMA = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['competencia1', 'competencia2', 'competencia3', 'competencia4', 'competencia5', 'feedbackGeral'],
+    properties: {
+        competencia1: { $ref: '#/$defs/competencia' },
+        competencia2: { $ref: '#/$defs/competencia' },
+        competencia3: { $ref: '#/$defs/competencia' },
+        competencia4: { $ref: '#/$defs/competencia' },
+        competencia5: { $ref: '#/$defs/competencia' },
+        feedbackGeral: { type: 'string' }
+    },
+    $defs: {
+        competencia: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['nota', 'pontosPositivos', 'pontosNegativos', 'feedback'],
+            properties: {
+                nota: { type: 'integer', enum: NOTAS_COMPETENCIA },
+                pontosPositivos: { type: 'array', items: { type: 'string' } },
+                pontosNegativos: { type: 'array', items: { type: 'string' } },
+                feedback: { type: 'string' }
+            }
+        }
+    }
+};
+
+const TRIAGEM_JSON_SCHEMA = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['apto', 'motivo', 'explicacao'],
+    properties: {
+        apto: { type: 'boolean' },
+        motivo: {
+            anyOf: [
+                { type: 'null' },
+                { type: 'string', enum: ['fuga_ao_tema', 'texto_sem_sentido', 'texto_insuficiente', 'nao_dissertativo_argumentativo', 'conteudo_inadequado'] }
+            ]
+        },
+        explicacao: { type: 'string' }
+    }
+};
+
+function jsonSchemaFormat(name, schema) {
+    return {
+        format: {
+            type: 'json_schema',
+            name,
+            strict: true,
+            schema
+        }
+    };
+}
+
 async function corrigirRedacao({ tema, texto }) {
 
     const response = await openai.responses.create({
         model: 'gpt-5-mini',
+        text: jsonSchemaFormat('avaliacao_enem', CORRECAO_JSON_SCHEMA),
 
         input: [
             {
@@ -18,7 +76,7 @@ Você é um avaliador especializado em redações do ENEM.
 
 Sua função é avaliar a redação seguindo rigorosamente os critérios das cinco competências oficiais do ENEM.
 
-IMPORTANTE: a pontuação deve ser baseada em evidências concretas presentes no texto e não em impressão geral, suposições, expectativa de "melhorar" ou comparação com redações imaginárias.
+IMPORTANTE: a pontuação deve ser baseada em evidências concretas presentes no texto. Estrutura, extensão, formalidade aparente e presença de conectivos não são provas de desempenho alto.
 
 COMPETÊNCIA 1:
 Domínio da modalidade escrita formal da língua portuguesa.
@@ -40,25 +98,26 @@ REGRAS OBRIGATÓRIAS DE AVALIAÇÃO:
 1. Cada competência deve receber exclusivamente uma destas notas:
    0, 40, 80, 120, 160, 200.
 2. Nunca utilize valores intermediários ou fora dessa escala.
-3. Baseie a nota em evidências observáveis no texto. Se não houver evidência concreta, não reduza pontos.
-4. Não invente erros, falhas ou problemas que não estejam de fato presentes na redação.
-5. Não reduza pontos apenas porque algo "poderia ser melhorado". Diferencie claramente:
-   - possibilidade de aprimoramento: não compromete a competência.
-   - falha concreta: prejudica de fato a competência e justifica a perda de pontos.
-6. Avalie cada competência individualmente, de acordo com seus próprios critérios, sem transferir penalizações de uma competência para outra.
-7. Mantenha consistência entre diferentes correções da mesma redação: a mesma evidência deve produzir a mesma interpretação.
-8. A nota deve refletir o texto analisado e não uma tentativa de reproduzir uma nota oficial pré-concebida.
-9. Para a Competência 5, não reduza automaticamente de 200 para 160 apenas porque a proposta poderia ter mais detalhamento. Só reduza quando houver deficiência concreta que realmente comprometa a proposta de intervenção, como ausência de ações viáveis, incoerência com direitos humanos, falta de articulação com o problema ou proposta insuficiente de fato.
-10. A justificativa e os pontos positivos/negativos devem se apoiar em elementos concretos presentes na redação.
+3. A ausência de evidência necessária para um nível superior é uma limitação concreta; não presuma qualidade que o texto não demonstra.
+4. Não invente erros, falhas, repertório, argumentos ou trechos que não estejam de fato presentes.
+5. Diferencie aprimoramento opcional de requisito não atendido. Não penalize estilo simples por si só, mas registre quando a falta de explicação, relação causal, repertório produtivo ou componente da intervenção impedir o nível da rubrica.
+6. Avalie cada competência isoladamente e não transfira o mesmo problema entre competências. Erros de ortografia, pontuação, concordância e sintaxe pertencem à Competência 1; só afetam a Competência 4 quando prejudicam concretamente a articulação e a compreensão das relações entre ideias.
+7. Antes de escolher 160 ou 200, confirme que o texto traz evidências suficientes e específicas compatíveis com esse nível. Se identificar deficiência relevante, a nota e a justificativa devem refletir essa deficiência.
+8. Para a Competência 2, verifique atendimento ao tema, desenvolvimento do recorte temático, tipo dissertativo-argumentativo e repertório sociocultural pertinente e produtivo. Não exija fonte famosa nem confirme a veracidade de um dado que não possa ser verificada apenas pelo texto; avalie sua função e articulação. Título não conta como desenvolvimento.
+9. Para a Competência 3, não trate uma afirmação genérica como argumento desenvolvido: verifique seleção, relação, organização e interpretação de informações em defesa da tese. Considere explicação, mecanismo, consequência, relação com a tese e progressão, sem exigir dados, número fixo de argumentos ou aprofundamento universitário.
+10. Para a Competência 4, avalie efetivamente os mecanismos de coesão: articulação entre períodos e parágrafos, operadores argumentativos, retomadas referenciais, encadeamento e progressão. A mera presença de conectivos não basta, mas erros gramaticais isolados não devem ser repetidos como penalização nesta competência.
+11. Para a Competência 5, verifique se há proposta relacionada ao problema e respeitosa aos direitos humanos, considerando agente, ação, meio/modo, finalidade/efeito e detalhamento quando apresentados. A rubrica não exige que toda proposta contenha prazo, indicador, orçamento, etapas ou todos esses elementos simultaneamente. Uma proposta pode alcançar nível alto sem listar cada detalhe administrativo, desde que seja concreta, articulada e suficientemente detalhada.
+12. Não exija uma intervenção específica que não esteja prevista no texto nem presuma inviabilidade sem explicar a incompatibilidade. Uma recomendação genérica é limitada quando não define ação e relação com o problema, mas a avaliação deve considerar todos os componentes realmente apresentados.
+13. A justificativa deve citar evidências observáveis do texto ou explicar com precisão a ausência de um requisito. Não use frases vazias como "bom desenvolvimento" sem dizer como isso aparece.
 
 REGRA DE PONTUAÇÃO POR COMPETÊNCIA:
 
-- 200: desempenho excelente e claramente atendendo ao critério.
-- 160: desempenho muito bom, com poucos problemas que não comprometam a competência.
-- 120: desempenho mediano, com desenvolvimento e argumentação parciais.
-- 80: desempenho limitado, com falhas relevantes e pouca sustentação.
-- 40: desempenho muito fraco, com deficiência grave na competência.
-- 0: ausência total ou inexistência do que a competência exige.
+- 200: atendimento integral, consistente e autônomo ao critério, com evidências específicas no texto e sem deficiência relevante.
+- 160: atendimento muito bom e predominante, com poucas inadequações pontuais que não comprometem o projeto de texto ou o critério avaliado.
+- 120: atendimento mediano; há domínio parcial, mas o desenvolvimento, a articulação ou a consistência apresentam limitações perceptíveis.
+- 80: atendimento limitado, com falhas relevantes e sustentação insuficiente.
+- 40: atendimento muito precário, com deficiência grave no critério.
+- 0: competência não demonstrada ou situação prevista para nota zero nos critérios oficiais.
 
 PARA CADA COMPETÊNCIA:
 
@@ -74,7 +133,7 @@ RESTRIÇÕES IMPORTANTES:
 - Não penalize por ausência de elementos que não são exigidos pela competência quando o texto já atende ao que é necessário.
 - Não transforme pequenas imperfeições em falhas graves quando elas não prejudicam efetivamente a competência.
 - Atenção especial à Competência 5: a proposta de intervenção deve ser avaliada pela qualidade da intervenção proposta e pela sua adequação ao problema, não por uma exigência artificial de maior detalhamento.
-- Não use "falta de profundidade", "poderia ser mais detalhado" ou "poderia ter mais exemplos" como justificativa de perda de pontos se não houver deficiência concreta.
+- Não use "falta de profundidade" isoladamente: descreva a ideia que ficou sem explicação, mecanismo, consequência ou relação lógica. A crítica deve apontar a deficiência concreta, sem inventar exigências.
 
 Retorne SOMENTE um JSON válido seguindo exatamente esta estrutura:
 
@@ -135,6 +194,7 @@ async function analisarTriagem({ tema, texto }) {
 
     const response = await openai.responses.create({
         model: 'gpt-5-mini',
+        text: jsonSchemaFormat('triagem_redacao', TRIAGEM_JSON_SCHEMA),
 
         input: [
             {
@@ -228,5 +288,7 @@ ${texto}
 
 module.exports = {
     corrigirRedacao,
-    analisarTriagem
+    analisarTriagem,
+    CORRECAO_JSON_SCHEMA,
+    TRIAGEM_JSON_SCHEMA
 };

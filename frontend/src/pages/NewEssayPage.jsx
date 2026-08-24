@@ -5,6 +5,7 @@ import { PageContainer } from '../components/ui/PageContainer'
 import { EssayEditor } from '../components/essay/EssayEditor'
 import { Icon } from '../components/ui/Icon'
 import { criarRedacao, corrigirRedacao } from '../services/redacoes'
+import { getSafeBackPath } from '../utils/navigation'
 import styles from './NewEssayPage.module.css'
 
 export function NewEssayPage({ navigate, setCorrectionResult }) {
@@ -35,7 +36,7 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
 
   return (
     <PageContainer>
-      <BackButton onClick={() => navigate('/temas')} />
+      <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
       <PageHeader
         eyebrow="Produção"
         title="Nova Redação"

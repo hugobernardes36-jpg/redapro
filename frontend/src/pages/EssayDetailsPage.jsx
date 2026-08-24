@@ -3,6 +3,7 @@ import { BackButton } from '../components/ui/BackButton'
 import { PageContainer } from '../components/ui/PageContainer'
 import { PageHeader } from '../components/ui/PageHeader'
 import { buscarRedacao } from '../services/redacoes'
+import { getSafeBackPath } from '../utils/navigation'
 import styles from './EssayDetailsPage.module.css'
 
 function formatDate(dateStr) {
@@ -49,13 +50,13 @@ export function EssayDetailsPage({ navigate, selectedEssayId, essayId }) {
   }, [resolvedEssayId])
 
   if (loading) {
-    return <PageContainer><BackButton onClick={() => navigate('/minhas-redacoes')} /><div className={styles.loadingState}>Carregando...</div></PageContainer>
+    return <PageContainer><BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} /><div className={styles.loadingState}>Carregando...</div></PageContainer>
   }
 
   if (erro || !essay) {
     return (
       <PageContainer>
-        <BackButton onClick={() => navigate('/minhas-redacoes')} />
+        <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
         <div className={styles.loadingState}>{erro || 'Redação não encontrada.'}</div>
       </PageContainer>
     )
@@ -63,7 +64,7 @@ export function EssayDetailsPage({ navigate, selectedEssayId, essayId }) {
 
   return (
     <PageContainer>
-      <BackButton onClick={() => navigate('/minhas-redacoes')} />
+      <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
       <PageHeader
         eyebrow="Redação"
         title={essay.tema}

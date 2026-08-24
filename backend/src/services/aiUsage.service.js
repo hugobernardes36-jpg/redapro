@@ -39,4 +39,12 @@ async function consumirCotaDiaria(userId) {
     }
 }
 
-module.exports = { consumirCotaDiaria };
+async function reverterCotaDiaria(userId) {
+    const hoje = obterDataDeHoje();
+    await prisma.aiUsage.updateMany({
+        where: { userId, date: hoje, count: { gt: 0 } },
+        data: { count: { decrement: 1 } },
+    });
+}
+
+module.exports = { consumirCotaDiaria, reverterCotaDiaria };

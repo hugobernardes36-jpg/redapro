@@ -5,6 +5,7 @@ import { PageContainer } from '../components/ui/PageContainer'
 import { ScoreCard } from '../components/essay/ScoreCard'
 import { CompetencyCard } from '../components/essay/CompetencyCard'
 import { buscarRedacao } from '../services/redacoes'
+import { getSafeBackPath } from '../utils/navigation'
 import styles from './ResultPage.module.css'
 
 const competencyLabels = {
@@ -134,7 +135,7 @@ export function ResultPage({ navigate, correctionResult, essayId }) {
   if (loading) {
     return (
       <PageContainer>
-        <BackButton onClick={() => navigate('/minhas-redacoes')} />
+        <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
         <div className={styles.empty}>
           <h2>Carregando correção...</h2>
         </div>
@@ -145,7 +146,7 @@ export function ResultPage({ navigate, correctionResult, essayId }) {
   if (!result) {
     return (
       <PageContainer>
-        <BackButton onClick={() => navigate('/minhas-redacoes')} />
+        <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
         <div className={styles.empty}>
           <h2>Nenhum resultado disponível</h2>
           <p>Crie e envie uma redação para ver o resultado aqui.</p>
@@ -161,7 +162,7 @@ export function ResultPage({ navigate, correctionResult, essayId }) {
   if (isRejected) {
     return (
       <PageContainer>
-        <BackButton onClick={() => navigate('/minhas-redacoes')} />
+        <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
         <PageHeader
           eyebrow="Correção"
           title="Redação não apta para correção"
@@ -177,7 +178,7 @@ export function ResultPage({ navigate, correctionResult, essayId }) {
 
   return (
     <PageContainer>
-      <BackButton onClick={() => navigate('/minhas-redacoes')} />
+      <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
       <PageHeader
         eyebrow="Correção"
         title="Resultado da redação"

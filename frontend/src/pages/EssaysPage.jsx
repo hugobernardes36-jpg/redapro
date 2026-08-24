@@ -6,6 +6,7 @@ import { Icon } from '../components/ui/Icon'
 import { Button } from '../components/ui/Button'
 import { EssayCard } from '../components/essay/EssayCard'
 import { listarRedacoes } from '../services/redacoes'
+import { getSafeBackPath } from '../utils/navigation'
 import styles from './EssaysPage.module.css'
 
 const TONES = ['blue', 'green', 'amber', 'purple']
@@ -49,7 +50,7 @@ export function EssaysPage({ navigate, onSelectEssay }) {
 
   return (
     <PageContainer>
-      <BackButton onClick={() => navigate('/inicio')} />
+      <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
       <PageHeader
         title="Minhas Redações"
         description="Consulte seus textos anteriores e acompanhe sua evolução."

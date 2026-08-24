@@ -11,6 +11,7 @@ import { ThemesPage } from './pages/ThemesPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { LandingPage } from './pages/LandingPage'
 import { useAuth } from './context/AuthContext'
+import { getSafeBackPath } from './utils/navigation'
 
 const routes = {
   '/login': LoginPage,
@@ -54,17 +55,26 @@ function useRouter() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  function navigate(to) {
+  function updateHistory(to, replace = false) {
     const next = typeof to === 'string' ? to : String(to)
     const target = new URL(next, window.location.origin)
     const finalPath = `${target.pathname}${target.search}`
 
-    window.history.pushState({}, '', finalPath)
+    const method = replace ? 'replaceState' : 'pushState'
+    window.history[method]({}, '', finalPath)
     setPath(normalizePath(finalPath))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  return { path, navigate }
+  return {
+    path,
+    navigate: (to) => updateHistory(to),
+    replace: (to) => updateHistory(to, true),
+  }
+}
+
+function getFallbackPathForCurrentRoute(pathname) {
+  return getSafeBackPath(pathname)
 }
 
 export default function App() {
@@ -72,6 +82,12 @@ export default function App() {
  const [selectedEssayId, setSelectedEssayId] = useState(null)
  const [correctionResult, setCorrectionResult] = useState(null)
  const { isAuthenticated, loading, logout } = useAuth()
+
+ useEffect(() => {
+   if (!loading && isAuthenticated && PUBLIC_ROUTES.has(router.path)) {
+     router.replace('/inicio')
+   }
+ }, [isAuthenticated, loading, router])
 
  const handleLogout = async () => {
    await logout()
@@ -96,7 +112,11 @@ export default function App() {
  }
 
  if (PUBLIC_ROUTES.has(router.path)) {
-   return <DashboardPage navigate={router.navigate} onSelectEssay={setSelectedEssayId} />
+   return (
+     <AppShell currentPath="/inicio" navigate={router.navigate} onLogout={handleLogout}>
+       <DashboardPage navigate={router.navigate} onSelectEssay={setSelectedEssayId} />
+     </AppShell>
+   )
  }
 
  const isEssayDetailRoute = router.path === '/redacao' || router.path.startsWith('/redacao/')
@@ -106,6 +126,7 @@ export default function App() {
 
  const pageProps = {
    navigate: router.navigate,
+  getBackPath: () => getFallbackPathForCurrentRoute(window.location.pathname),
    selectedEssayId: selectedEssayId ?? essayId,
    onSelectEssay: setSelectedEssayId,
    correctionResult,

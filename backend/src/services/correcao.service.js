@@ -10,7 +10,7 @@ const {
     verificarTamanhoTexto
 } = require('./triagem.service');
 
-const { consumirCotaDiaria } = require('./aiUsage.service');
+const { consumirCotaDiaria, reverterCotaDiaria } = require('./aiUsage.service');
 
 // Busca a redação e, quando um userId é informado, garante que ela pertence a esse usuário.
 // Essa checagem fica dentro do service para proteger qualquer chamador atual ou futuro (anti-IDOR).
@@ -89,6 +89,10 @@ function calcularNotaFinal(correcao) {
 }
 
 function validarPontuacao(correcao) {
+    if (!correcao || typeof correcao !== 'object') {
+        return false;
+    }
+
     const competencias = [
         correcao.competencia1,
         correcao.competencia2,
@@ -98,6 +102,10 @@ function validarPontuacao(correcao) {
     ];
 
     for (const competencia of competencias) {
+        if (!competencia || typeof competencia !== 'object') {
+            return false;
+        }
+
         if (!Number.isInteger(competencia.nota)) {
             return false;
         }
@@ -112,6 +120,46 @@ function validarPontuacao(correcao) {
     }
 
     return true;
+}
+
+function validarAvaliacao(correcao) {
+    if (!validarPontuacao(correcao) || typeof correcao.feedbackGeral !== 'string') {
+        return false;
+    }
+
+    for (const competencia of [1, 2, 3, 4, 5]) {
+        const item = correcao[`competencia${competencia}`];
+
+        if (!Array.isArray(item.pontosPositivos) || !Array.isArray(item.pontosNegativos)) {
+            return false;
+        }
+
+        if (!item.pontosPositivos.every(ponto => typeof ponto === 'string') ||
+            !item.pontosNegativos.every(ponto => typeof ponto === 'string') ||
+            typeof item.feedback !== 'string') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function validarTriagem(triagem) {
+    const motivos = [
+        'fuga_ao_tema',
+        'texto_sem_sentido',
+        'texto_insuficiente',
+        'nao_dissertativo_argumentativo',
+        'conteudo_inadequado'
+    ];
+
+    if (!triagem || typeof triagem.apto !== 'boolean' || typeof triagem.explicacao !== 'string') {
+        return false;
+    }
+
+    return triagem.apto
+        ? triagem.motivo === null
+        : motivos.includes(triagem.motivo);
 }
 
 function mapearMotivoHumano(motivo) {
@@ -131,7 +179,9 @@ function mapearMotivoHumano(motivo) {
 
 async function salvarCorrecao(redacaoId, payload) {
     const dadosIa = payload.dadosIa || payload;
-    const motivoHumano = payload.motivoHumano || mapearMotivoHumano(payload.motivo);
+    const motivoHumano = payload.status === 'NAO_APTA'
+        ? (payload.motivoHumano || mapearMotivoHumano(payload.motivo))
+        : null;
     const base = {
         redacaoId: Number(redacaoId),
         status: payload.status || 'CORRIGIDA',
@@ -140,7 +190,7 @@ async function salvarCorrecao(redacaoId, payload) {
         feedback: payload.feedbackGeral || payload.feedback || '',
         dadosIa: {
             ...(dadosIa && typeof dadosIa === 'object' ? dadosIa : {}),
-            motivoHumano,
+            ...(motivoHumano ? { motivoHumano } : {}),
             status: payload.status || 'CORRIGIDA',
             notaFinal: Number(payload.notaFinal ?? 0)
         },
@@ -216,55 +266,67 @@ async function executarCorrecao(redacaoId, userId) {
         throw erro;
     }
 
-    const triagem = await analisarTriagem({
-        tema: redacao.tema,
-        texto: redacao.texto
-    });
+    try {
+        const triagem = await analisarTriagem({
+            tema: redacao.tema,
+            texto: redacao.texto
+        });
 
-    if (!triagem.apto) {
+        if (!validarTriagem(triagem)) {
+            throw new Error('A triagem da IA possui formato inválido');
+        }
+
+        if (!triagem.apto) {
+            const resultado = {
+                redacaoId: redacao.id,
+                notaFinal: 0,
+                status: 'NAO_APTA',
+                motivo: triagem.motivo,
+                motivoHumano: mapearMotivoHumano(triagem.motivo),
+                feedbackGeral: triagem.explicacao || mapearMotivoHumano(triagem.motivo),
+                explicacao: triagem.explicacao || mapearMotivoHumano(triagem.motivo),
+            };
+
+            await salvarCorrecao(redacao.id, resultado);
+            return resultado;
+        }
+
+        const avaliacao = await corrigirRedacao({
+            tema: redacao.tema,
+            texto: redacao.texto
+        });
+
+        if (!validarAvaliacao(avaliacao)) {
+            throw new Error('A avaliação da IA possui formato ou pontuação inválida');
+        }
+
+        const notaFinal = calcularNotaFinal(avaliacao);
         const resultado = {
             redacaoId: redacao.id,
-            notaFinal: 0,
-            status: 'NAO_APTA',
-            motivo: triagem.motivo,
-            motivoHumano: mapearMotivoHumano(triagem.motivo),
-            feedbackGeral: triagem.explicacao || mapearMotivoHumano(triagem.motivo),
-            explicacao: triagem.explicacao || mapearMotivoHumano(triagem.motivo),
+            status: 'CORRIGIDA',
+            competencia1: avaliacao.competencia1,
+            competencia2: avaliacao.competencia2,
+            competencia3: avaliacao.competencia3,
+            competencia4: avaliacao.competencia4,
+            competencia5: avaliacao.competencia5,
+            notaFinal,
+            feedbackGeral: avaliacao.feedbackGeral,
+            dadosIa: avaliacao,
         };
 
-        await salvarCorrecao(redacao.id, resultado);
-        return resultado;
+        const correcaoSalva = await salvarCorrecao(redacao.id, resultado);
+
+        return {
+            ...resultado,
+            correcaoId: correcaoSalva.id,
+        };
+    } catch (error) {
+        // Se ocorrer qualquer erro durante a comunicação com a IA ou validação dos dados, revertemos a cota consumida.
+        await reverterCotaDiaria(userId).catch(err => {
+            console.error('Erro ao reverter cota diária de IA:', err);
+        });
+        throw error;
     }
-
-    const avaliacao = await corrigirRedacao({
-        tema: redacao.tema,
-        texto: redacao.texto
-    });
-
-    if (!validarPontuacao(avaliacao)) {
-        throw new Error('A avaliação da IA possui pontuação inválida');
-    }
-
-    const notaFinal = calcularNotaFinal(avaliacao);
-    const resultado = {
-        redacaoId: redacao.id,
-        status: 'CORRIGIDA',
-        competencia1: avaliacao.competencia1,
-        competencia2: avaliacao.competencia2,
-        competencia3: avaliacao.competencia3,
-        competencia4: avaliacao.competencia4,
-        competencia5: avaliacao.competencia5,
-        notaFinal,
-        feedbackGeral: avaliacao.feedbackGeral,
-        dadosIa: avaliacao,
-    };
-
-    const correcaoSalva = await salvarCorrecao(redacao.id, resultado);
-
-    return {
-        ...resultado,
-        correcaoId: correcaoSalva.id,
-    };
 }
 
 module.exports = {
@@ -273,5 +335,7 @@ module.exports = {
     criarEstruturaCorrecao,
     calcularNotaFinal,
     validarPontuacao,
+    validarAvaliacao,
+    validarTriagem,
     executarCorrecao
 };
