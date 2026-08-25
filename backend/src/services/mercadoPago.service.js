@@ -1,10 +1,17 @@
 const crypto = require('crypto');
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 
+function configError(message) {
+    const error = new Error(message);
+    error.status = 503;
+    error.code = 'MP_CONFIG';
+    return error;
+}
+
 function getAccessToken() {
     const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
     if (!token) {
-        throw new Error('Access Token do Mercado Pago não configurado.');
+        throw configError('Access Token do Mercado Pago não configurado.');
     }
     return token;
 }
@@ -15,17 +22,17 @@ function getClient() {
 
 function getBackendPublicUrl() {
     const value = process.env.BACKEND_PUBLIC_URL;
-    if (!value) throw new Error('BACKEND_PUBLIC_URL não está configurada para o webhook de teste.');
+    if (!value) throw configError('BACKEND_PUBLIC_URL não está configurada para o webhook de teste.');
 
     let url;
     try {
         url = new URL(value);
     } catch {
-        throw new Error('BACKEND_PUBLIC_URL não é uma URL válida.');
+        throw configError('BACKEND_PUBLIC_URL não é uma URL válida.');
     }
 
     if (url.protocol !== 'https:' && url.hostname !== 'localhost') {
-        throw new Error('BACKEND_PUBLIC_URL deve usar HTTPS no ambiente de teste.');
+        throw configError('BACKEND_PUBLIC_URL deve usar HTTPS no ambiente de teste.');
     }
 
     return url.toString().replace(/\/$/, '');

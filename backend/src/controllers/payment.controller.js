@@ -12,9 +12,15 @@ async function checkout(req, res) {
 
         return res.status(201).json(await criarCompra(req.user.id, packageId));
     } catch (error) {
-        console.error('Erro ao criar checkout:', error.message);
-        if (error.message.includes('BACKEND_PUBLIC_URL')) {
-            return res.status(503).json({ erro: 'Checkout de teste indisponível: configure a URL pública do webhook.' });
+        console.error('Erro ao criar checkout:', {
+            name: error.name,
+            code: error.code,
+            status: error.status,
+            message: error.message,
+            cause: error.cause,
+        });
+        if (error.code === 'MP_CONFIG') {
+            return res.status(503).json({ erro: 'Checkout indisponível: pagamento não configurado no servidor.' });
         }
         return res.status(error.status || 502).json({ erro: 'Não foi possível iniciar o checkout.' });
     }

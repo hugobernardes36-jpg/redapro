@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "dev": "nodemon src/server.js",
+    "build": "prisma generate && prisma migrate deploy",
     "start": "node src/server.js"
   },
   "keywords": [],
