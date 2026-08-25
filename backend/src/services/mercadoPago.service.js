@@ -2,12 +2,9 @@ const crypto = require('crypto');
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
 
 function getAccessToken() {
-    if (process.env.NODE_ENV === 'production') {
-        throw new Error('Monetização de teste não pode ser executada em produção.');
-    }
     const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-    if (!token || !token.startsWith('TEST-')) {
-        throw new Error('Mercado Pago configurado sem credencial de teste.');
+    if (!token) {
+        throw new Error('Access Token do Mercado Pago não configurado.');
     }
     return token;
 }
