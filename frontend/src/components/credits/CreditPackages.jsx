@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Icon } from '../ui/Icon'
 import { listarPacotesCreditos } from '../../services/credits'
 import { iniciarCheckout } from '../../services/payments'
 import styles from './CreditPackages.module.css'
@@ -7,7 +8,7 @@ function formatPrice(amountCents) {
   return (amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export function CreditPackages({ title = 'Escolha um pacote para continuar' }) {
+export function CreditPackages({ title = 'Escolha um pacote para comprar créditos' }) {
   const [packages, setPackages] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
@@ -34,7 +35,10 @@ export function CreditPackages({ title = 'Escolha um pacote para continuar' }) {
   return (
     <section className={styles.wrapper}>
       <div className={styles.heading}>
-        <span>CRÉDITOS</span>
+        <span>
+          <Icon name="spark" size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+          Pacotes de Créditos
+        </span>
         <h2>{title}</h2>
       </div>
       {error && <div className={styles.error}>{error}</div>}
@@ -46,7 +50,17 @@ export function CreditPackages({ title = 'Escolha um pacote para continuar' }) {
             <span>{formatPrice(item.amountCents)}</span>
             <em>{formatPrice(Math.round(item.amountCents / item.credits))} por correção</em>
             <button type="button" onClick={() => handleCheckout(item.id)} disabled={selected !== null}>
-              {selected === item.id ? 'Abrindo checkout...' : 'Comprar'}
+              {selected === item.id ? (
+                <>
+                  <Icon name="clock" size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                  Abrindo checkout...
+                </>
+              ) : (
+                <>
+                  <Icon name="spark" size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                  Comprar
+                </>
+              )}
             </button>
           </article>
         ))}
@@ -54,3 +68,4 @@ export function CreditPackages({ title = 'Escolha um pacote para continuar' }) {
     </section>
   )
 }
+

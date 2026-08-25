@@ -1,0 +1,234 @@
+.summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: stretch;
+  margin: 24px 0;
+  padding: 28px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0f9f8 0%, #f5fbfa 100%);
+  border: 2px solid #d3e8e5;
+  transition: all 200ms ease;
+}
+
+.container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.iconWrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  background: rgba(23, 107, 99, 0.1);
+  color: #176b63;
+  transition: transform 200ms ease;
+}
+
+.summary:hover .iconWrapper {
+  transform: scale(1.05);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5b6b82;
+}
+
+.balance {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.number {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1;
+  color: #176b63;
+  letter-spacing: -0.02em;
+}
+
+.unit {
+  font-size: 14px;
+  color: #5b6b82;
+  font-weight: 500;
+}
+
+.description {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5b6b82;
+  max-width: 400px;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(23, 107, 99, 0.2);
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.detailLabel {
+  font-size: 12px;
+  color: #5b6b82;
+  font-weight: 600;
+}
+
+.detailValue {
+  font-size: 24px;
+  color: #176b63;
+  font-weight: 700;
+}
+
+/* Estado: Saldo Saudável */
+.healthy {
+  border-color: #b5e3de;
+  background: linear-gradient(135deg, #f0f9f8 0%, #e8f5f2 100%);
+}
+
+.healthy .iconWrapper {
+  background: rgba(23, 107, 99, 0.12);
+  color: #176b63;
+}
+
+/* Estado: Saldo Baixo */
+.low {
+  border-color: #f5d9b3;
+  background: linear-gradient(135deg, #fffbf0 0%, #fffaf5 100%);
+}
+
+.low .iconWrapper {
+  background: rgba(202, 138, 0, 0.1);
+  color: #d4a017;
+}
+
+.low .number {
+  color: #d4a017;
+}
+
+.low .detailValue {
+  color: #d4a017;
+}
+
+/* Estado: Sem Créditos */
+.critical {
+  border-color: #f5c4c4;
+  background: linear-gradient(135deg, #fff5f5 0%, #fffaf9 100%);
+}
+
+.critical .iconWrapper {
+  background: rgba(199, 45, 45, 0.1);
+  color: #c72d2d;
+}
+
+.critical .number {
+  color: #c72d2d;
+}
+
+.critical .detailValue {
+  color: #c72d2d;
+}
+
+.critical .description {
+  color: #a32920;
+  font-weight: 500;
+}
+
+@media (max-width: 800px) {
+  .summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .iconWrapper {
+    width: 60px;
+    height: 60px;
+  }
+
+  .number {
+    font-size: 40px;
+  }
+
+  .details {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .detailValue {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 500px) {
+  .summary {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .container {
+    gap: 12px;
+  }
+
+  .iconWrapper {
+    width: 52px;
+    height: 52px;
+  }
+
+  .number {
+    font-size: 36px;
+  }
+
+  .balance {
+    gap: 6px;
+  }
+
+  .unit {
+    font-size: 12px;
+  }
+
+  .description {
+    font-size: 12px;
+  }
+
+  .details {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .detailLabel {
+    font-size: 11px;
+  }
+
+  .detailValue {
+    font-size: 18px;
+  }
+}
