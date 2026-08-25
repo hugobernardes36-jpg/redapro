@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button'
 import { PageContainer } from '../components/ui/PageContainer'
 import { EssayCard } from '../components/essay/EssayCard'
 import { EmailVerificationBanner } from '../components/EmailVerificationBanner'
+import { CreditBalanceCard } from '../components/credits/CreditBalanceCard'
 import { listarRedacoes, obterEstatisticas } from '../services/redacoes'
 import { useAuth } from '../context/AuthContext'
 import styles from './DashboardPage.module.css'
@@ -63,6 +64,7 @@ export function DashboardPage({ navigate, onSelectEssay }) {
     <EmailVerificationBanner />
     <section className={styles.welcome}><div><span className={styles.kicker}>INÍCIO</span><h1>Olá, {displayName}! 👋</h1><p>Continue praticando. Sua próxima redação pode ser a sua melhor.</p></div><div className={styles.level}><span>Nível atual</span><strong>{level}</strong><small>{stats.essaysCount > 0 ? `${stats.correctedCount} redações corrigidas` : 'Escreva sua primeira redação'}</small></div></section>
     <section className={styles.cta}><div className={styles.ctaIcon}><Icon name="edit" size={24}/></div><div><span>PRONTO PARA PRATICAR?</span><h2>Escreva uma nova redação</h2><p>Escolha um tema e coloque suas ideias no papel.</p></div><Button size="lg" onClick={()=>navigate('/nova-redacao')}>Nova Redação <Icon name="arrowRight" size={16}/></Button></section>
+    <CreditBalanceCard navigate={navigate} />
     <section className={styles.stats}>{[['Média das notas',stats.averageScore,'chart'],['Redações feitas',stats.essaysCount,'file'],['Última nota',stats.lastScore,'check'],['Melhor nota',stats.bestScore,'spark']].map(([label,value,icon])=><article key={label}><div className={styles.statIcon}><Icon name={icon} size={17}/></div><div><strong>{value}</strong><span>{label}</span></div></article>)}</section>
     <section className={styles.recent}><div className={styles.sectionTitle}><div><h2>Redações recentes</h2><p>Veja seus últimos resultados.</p></div><button type="button" onClick={()=>navigate('/minhas-redacoes')}>Ver todas <Icon name="arrowRight" size={15}/></button></div>
       {loading ? (
