@@ -5,6 +5,8 @@ require("dotenv").config();
 
 const redacaoRoutes = require('./routes/redacao.routes');
 const authRoutes = require('./routes/auth.routes');
+const creditRoutes = require('./routes/credit.routes');
+const paymentRoutes = require('./routes/payment.routes');
 const app = express();
 
 app.set('trust proxy', 1);
@@ -45,6 +47,8 @@ app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/redacoes', redacaoRoutes);
+app.use('/api/credits', creditRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get("/", (req, res) => {
   res.json({

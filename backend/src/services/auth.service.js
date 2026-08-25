@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { criarLoteGratuito } = require('./credit.service');
 
 function normalizarEmail(email) {
     return String(email).trim().toLowerCase();
@@ -23,13 +24,18 @@ async function buscarUsuarioPorId(id) {
 }
 
 async function criarUsuario({ name, email, password }) {
-    return prisma.user.create({
-        data: {
-            name: String(name).trim(),
-            email: normalizarEmail(email),
-            password,
-            emailVerified: false,
-        },
+    return prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+            data: {
+                name: String(name).trim(),
+                email: normalizarEmail(email),
+                password,
+                emailVerified: false,
+            },
+        });
+
+        await criarLoteGratuito(tx, user.id);
+        return user;
     });
 }
 

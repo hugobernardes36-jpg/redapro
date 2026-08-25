@@ -30,6 +30,27 @@ export async function criarRedacao({ tema, texto }) {
   return response.json()
 }
 
+export async function enviarRedacaoParaCorrecao({ tema, texto }) {
+  const response = await apiFetch('/api/redacoes/corrigir', {
+    method: 'POST',
+    body: JSON.stringify({ tema, texto }),
+  })
+
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) {
+    const error = new Error(payload?.erro || 'Erro ao enviar redação')
+    error.code = payload?.codigo
+    error.status = response.status
+    throw error
+  }
+
+  if (payload?.status === 'NAO_APTA') {
+    throw new Error(payload.motivoHumano || payload.feedbackGeral || payload.explicacao || mapearMotivoHumano(payload.motivo) || 'A redação não foi aprovada para correção.')
+  }
+
+  return payload
+}
+
 export async function corrigirRedacao(id) {
   const response = await apiFetch(`/api/redacoes/${id}/corrigir`, {
     method: 'POST',
@@ -38,7 +59,10 @@ export async function corrigirRedacao(id) {
   const payload = await response.json().catch(() => null)
 
   if (!response.ok) {
-    throw new Error(payload?.erro || 'Erro ao corrigir redação')
+    const error = new Error(payload?.erro || 'Erro ao corrigir redação')
+    error.code = payload?.codigo
+    error.status = response.status
+    throw error
   }
 
   if (payload?.status === 'NAO_APTA') {

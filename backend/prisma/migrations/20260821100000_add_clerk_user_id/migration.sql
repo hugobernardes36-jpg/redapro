@@ -1,0 +1,3 @@
+-- Legacy migration marker.
+-- The Clerk integration was abandoned. The clerkUserId column already exists
+-- in the test database, so this migration intentionally performs no change.

@@ -3,10 +3,10 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    criarRedacao,
     listarRedacoes,
     buscarRedacao,
-    obterEstatisticas
+    obterEstatisticas,
+    criarEExecutarCorrecao
 } = require('../controllers/redacao.controller');
 
 const {
@@ -31,7 +31,10 @@ router.get('/stats', obterEstatisticas);
 router.get('/:id', buscarRedacao);
 
 // POST /api/redacoes — criar nova redação vinculada ao usuário autenticado
-router.post('/', aiRateLimiterPerUser, aiRateLimiterPerIp, criarRedacao);
+router.post('/', aiRateLimiterPerUser, aiRateLimiterPerIp, criarEExecutarCorrecao);
+
+// POST /api/redacoes/corrigir — autoriza crédito e cria a redação atomicamente.
+router.post('/corrigir', aiRateLimiterPerUser, aiRateLimiterPerIp, criarEExecutarCorrecao);
 
 // POST /api/redacoes/:id/corrigir — corrigir redação com IA (protegida por rate limit + cota diária)
 router.post('/:id/corrigir', aiRateLimiterPerUser, aiRateLimiterPerIp, async (req, res) => {
@@ -49,7 +52,7 @@ router.post('/:id/corrigir', aiRateLimiterPerUser, aiRateLimiterPerIp, async (re
 
     } catch (error) {
         if (error.status) {
-            return res.status(error.status).json({ erro: error.message });
+            return res.status(error.status).json({ erro: error.message, codigo: error.code });
         }
 
         console.error(error);

@@ -11,6 +11,11 @@ const {
 } = require('./triagem.service');
 
 const { consumirCotaDiaria, reverterCotaDiaria } = require('./aiUsage.service');
+const {
+    reservarCredito,
+    finalizarConsumo,
+    reverterConsumo,
+} = require('./credit.service');
 
 // Busca a redação e, quando um userId é informado, garante que ela pertence a esse usuário.
 // Essa checagem fica dentro do service para proteger qualquer chamador atual ou futuro (anti-IDOR).
@@ -221,7 +226,7 @@ async function salvarCorrecao(redacaoId, payload) {
     });
 }
 
-async function executarCorrecao(redacaoId, userId) {
+async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
     const redacao = await buscarRedacao(redacaoId, userId);
 
     const textoBasico = verificarTextoBasico(redacao.texto);
@@ -258,15 +263,20 @@ async function executarCorrecao(redacaoId, userId) {
         return resultado;
     }
 
-    // A partir daqui há uma chamada real à OpenAI, portanto consome a cota diária do usuário.
-    const cotaDisponivel = await consumirCotaDiaria(userId);
-    if (!cotaDisponivel) {
-        const erro = new Error('Você atingiu o limite diário de correções. Tente novamente amanhã.');
-        erro.status = 429;
-        throw erro;
-    }
-
+    let consumo = null;
+    let cotaConsumida = false;
     try {
+        consumo = consumoInicial || await reservarCredito(userId, redacao.id);
+
+        // A partir daqui há uma chamada real à OpenAI, portanto consome a cota diária do usuário.
+        const cotaDisponivel = await consumirCotaDiaria(userId);
+        if (!cotaDisponivel) {
+            const erro = new Error('Você atingiu o limite diário de correções. Tente novamente amanhã.');
+            erro.status = 429;
+            throw erro;
+        }
+        cotaConsumida = true;
+
         const triagem = await analisarTriagem({
             tema: redacao.tema,
             texto: redacao.texto
@@ -288,6 +298,8 @@ async function executarCorrecao(redacaoId, userId) {
             };
 
             await salvarCorrecao(redacao.id, resultado);
+            await reverterConsumo(consumo.id);
+            await reverterCotaDiaria(userId);
             return resultado;
         }
 
@@ -315,16 +327,25 @@ async function executarCorrecao(redacaoId, userId) {
         };
 
         const correcaoSalva = await salvarCorrecao(redacao.id, resultado);
+        await finalizarConsumo(consumo.id);
 
         return {
             ...resultado,
             correcaoId: correcaoSalva.id,
         };
     } catch (error) {
-        // Se ocorrer qualquer erro durante a comunicação com a IA ou validação dos dados, revertemos a cota consumida.
-        await reverterCotaDiaria(userId).catch(err => {
-            console.error('Erro ao reverter cota diária de IA:', err);
-        });
+        if (consumo) {
+            await reverterConsumo(consumo.id).catch(err => {
+                console.error('Erro ao reverter consumo de crédito:', err);
+            });
+        }
+
+        // Se ocorrer qualquer erro durante a comunicação com a IA ou validação dos dados, revertemos as cotas consumidas.
+        if (cotaConsumida) {
+            await reverterCotaDiaria(userId).catch(err => {
+                console.error('Erro ao reverter cota diária de IA:', err);
+            });
+        }
         throw error;
     }
 }

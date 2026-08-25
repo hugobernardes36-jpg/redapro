@@ -9,6 +9,7 @@ import { EssaysPage } from './pages/EssaysPage'
 import { EssayDetailsPage } from './pages/EssayDetailsPage'
 import { ThemesPage } from './pages/ThemesPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { CreditsPage } from './pages/CreditsPage'
 import { LandingPage } from './pages/LandingPage'
 import { useAuth } from './context/AuthContext'
 import { getSafeBackPath } from './utils/navigation'
@@ -22,6 +23,7 @@ const routes = {
   '/minhas-redacoes': EssaysPage,
   '/temas': ThemesPage,
   '/perfil': ProfilePage,
+  '/creditos': CreditsPage,
 }
 
 const PUBLIC_ROUTES = new Set(['/login', '/cadastro', '/'])

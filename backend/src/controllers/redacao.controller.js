@@ -1,5 +1,7 @@
 const prisma = require('../lib/prisma');
 const validarRedacao = require('../validators/redacao.validator');
+const { criarRedacaoAutorizada } = require('../services/submission.service');
+const { executarCorrecao } = require('../services/correcao.service');
 
 function normalizarCorrecao(correcao) {
     if (!correcao) {
@@ -50,6 +52,36 @@ async function criarRedacao(req, res) {
         return res.status(500).json({
             erro: 'Erro ao criar redação'
         });
+    }
+}
+
+async function criarEExecutarCorrecao(req, res) {
+    let redacaoCriada = null;
+    try {
+        const { tema, texto } = req.body || {};
+        const { redacao, consumo } = await criarRedacaoAutorizada({
+            userId: req.user.id,
+            tema,
+            texto,
+        });
+        redacaoCriada = redacao;
+        const resultado = await executarCorrecao(redacao.id, req.user.id, consumo);
+        return res.status(201).json(resultado);
+    } catch (error) {
+        if (redacaoCriada) {
+            await prisma.redacao.deleteMany({ where: { id: redacaoCriada.id, correcao: null } }).catch((deleteError) => {
+                console.error('Erro ao remover redação sem resultado:', deleteError.message);
+            });
+        }
+        if (error.status) {
+            return res.status(error.status).json({
+                erro: error.message,
+                codigo: error.code,
+                ...(error.details ? { detalhes: error.details } : {}),
+            });
+        }
+        console.error('Erro ao criar e corrigir redação:', error.message);
+        return res.status(500).json({ erro: 'Erro ao processar redação.' });
     }
 }
 
@@ -172,5 +204,6 @@ module.exports = {
     criarRedacao,
     listarRedacoes,
     buscarRedacao,
-    obterEstatisticas
+    obterEstatisticas,
+    criarEExecutarCorrecao
 };

@@ -30,6 +30,11 @@ model User {
 
   redacoes     Redacao[]
   aiUsages     AiUsage[]
+  creditLots   CreditLot[]
+  ledgerEntries CreditLedgerEntry[]
+  purchases    Purchase[]
+  payments     Payment[]
+  consumptions CreditConsumption[]
 }
 
 model Redacao {
@@ -77,4 +82,154 @@ model AiUsage {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
+}
+
+enum CreditLotType {
+  FREE
+  PURCHASE
+}
+
+enum CreditLedgerType {
+  FREE_GRANT
+  PURCHASE_GRANT
+  CONSUMPTION
+  CONSUMPTION_REVERSAL
+}
+
+enum CreditConsumptionStatus {
+  RESERVED
+  CONSUMED
+  REVERSED
+}
+
+enum PurchaseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  REFUNDED
+  CHARGEBACK
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  REFUNDED
+  CHARGEBACK
+  UNKNOWN
+}
+
+enum WebhookProcessingStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
+model CreditLot {
+  id              String        @id @default(cuid())
+  userId          Int
+  type            CreditLotType
+  quantityGranted Int
+  quantityRemaining Int
+  purchaseId      String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now()) @updatedAt
+
+  user            User           @relation(fields: [userId], references: [id])
+  purchase        Purchase?      @relation(fields: [purchaseId], references: [id])
+  ledgerEntries   CreditLedgerEntry[]
+  consumptions    CreditConsumption[]
+
+  @@index([userId, type, quantityRemaining])
+  @@unique([userId, type, purchaseId])
+}
+
+model CreditLedgerEntry {
+  idempotencyKey String            @id
+  userId         Int
+  creditLotId    String
+  type           CreditLedgerType
+  amount         Int
+  purchaseId     String?
+  redacaoId      Int?
+  createdAt      DateTime          @default(now())
+
+  user       User      @relation(fields: [userId], references: [id])
+  creditLot  CreditLot @relation(fields: [creditLotId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([purchaseId])
+  @@index([redacaoId])
+}
+
+model CreditConsumption {
+  id          String                  @id @default(cuid())
+  userId      Int
+  redacaoId   Int
+  creditLotId String
+  status      CreditConsumptionStatus @default(RESERVED)
+  createdAt   DateTime                @default(now())
+  finalizedAt DateTime?
+
+  user      User      @relation(fields: [userId], references: [id])
+  creditLot CreditLot @relation(fields: [creditLotId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([redacaoId])
+}
+
+model Purchase {
+  id                String         @id @default(cuid())
+  userId            Int
+  packageId         String
+  credits           Int
+  amountCents       Int
+  currency          String         @default("BRL")
+  status            PurchaseStatus @default(PENDING)
+  externalReference String         @unique
+  preferenceId      String?        @unique
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @default(now()) @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id])
+  payment    Payment?
+  creditLot  CreditLot?
+
+  @@index([userId, createdAt])
+}
+
+model Payment {
+  id                   String        @id @default(cuid())
+  userId               Int
+  purchaseId           String        @unique
+  mercadoPagoPaymentId String        @unique
+  status               PaymentStatus
+  statusDetail         String?
+  amountCents          Int
+  currency             String
+  approvedAt           DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @default(now()) @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  purchase Purchase @relation(fields: [purchaseId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model WebhookEvent {
+  eventKey        String                  @id
+  eventType       String
+  mercadoPagoId   String?
+  status          WebhookProcessingStatus @default(RECEIVED)
+  attempts        Int                     @default(0)
+  receivedAt      DateTime                @default(now())
+  processedAt     DateTime?
+  lastError       String?
+
+  @@index([mercadoPagoId])
+  @@index([status, receivedAt])
 }
