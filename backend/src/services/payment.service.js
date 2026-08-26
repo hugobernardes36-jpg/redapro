@@ -40,13 +40,18 @@ async function criarCompra(userId, packageId) {
 
     try {
         const preference = await criarPreferencia({ purchaseId, packageData });
+        const isTestToken = process.env.MERCADO_PAGO_ACCESS_TOKEN?.startsWith('TEST-');
+        const checkoutUrl = (isTestToken && preference.sandbox_init_point)
+            ? preference.sandbox_init_point
+            : (preference.init_point || preference.sandbox_init_point);
+
         return prisma.purchase.update({
             where: { id: purchase.id },
             data: { preferenceId: preference.id },
             select: { id: true, preferenceId: true, status: true, packageId: true, credits: true, amountCents: true },
         }).then((result) => ({
             ...result,
-            checkoutUrl: preference.init_point,
+            checkoutUrl,
         }));
     } catch (error) {
         await prisma.purchase.update({ where: { id: purchase.id }, data: { status: 'CANCELLED' } }).catch(() => {});
