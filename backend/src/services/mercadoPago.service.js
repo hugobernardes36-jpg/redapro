@@ -20,28 +20,27 @@ function getClient() {
     return new MercadoPagoConfig({ accessToken: getAccessToken() });
 }
 
-function getBackendPublicUrl() {
+function getNotificationUrl() {
     const value = process.env.BACKEND_PUBLIC_URL;
-    if (!value) throw configError('BACKEND_PUBLIC_URL não está configurada para o webhook de teste.');
+    if (!value) return undefined;
 
-    let url;
     try {
-        url = new URL(value);
+        const url = new URL(value);
+        if (url.protocol === 'https:') {
+            return `${url.toString().replace(/\/$/, '')}/api/payments/webhook`;
+        }
     } catch {
-        throw configError('BACKEND_PUBLIC_URL não é uma URL válida.');
+        // Se a URL não for válida ou não for HTTPS (ex: localhost), omite no ambiente local
     }
 
-    if (url.protocol !== 'https:' && url.hostname !== 'localhost') {
-        throw configError('BACKEND_PUBLIC_URL deve usar HTTPS no ambiente de teste.');
-    }
-
-    return url.toString().replace(/\/$/, '');
+    return undefined;
 }
 
 async function criarPreferencia({ purchaseId, packageData }) {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const client = getClient();
     const preference = new Preference(client);
+    const notificationUrl = getNotificationUrl();
 
     return preference.create({
         body: {
@@ -53,7 +52,7 @@ async function criarPreferencia({ purchaseId, packageData }) {
                 unit_price: packageData.amountCents / 100,
             }],
             external_reference: `redapro:${purchaseId}`,
-            notification_url: `${getBackendPublicUrl()}/api/payments/webhook`,
+            ...(notificationUrl ? { notification_url: notificationUrl } : {}),
             back_urls: {
                 success: `${frontendUrl}/inicio?payment=success`,
                 pending: `${frontendUrl}/inicio?payment=pending`,
