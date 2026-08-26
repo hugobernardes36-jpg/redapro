@@ -70,21 +70,45 @@ async function consultarPagamento(paymentId) {
 
 function validarAssinaturaWebhook({ signature, requestId, dataId }) {
     const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
-    if (!secret || !signature || !requestId || !dataId) return false;
+    
+    if (!secret) {
+        console.warn(`[MP-WEBHOOK] MERCADO_PAGO_WEBHOOK_SECRET não está configurado!`);
+        return false;
+    }
+    
+    if (!signature || !requestId || !dataId) {
+        console.warn(`[MP-WEBHOOK] Dados incompletos:`, { 
+            hasSignature: !!signature, 
+            hasRequestId: !!requestId, 
+            hasDataId: !!dataId 
+        });
+        return false;
+    }
 
     const parts = Object.fromEntries(signature.split(',').map((part) => {
         const [key, value] = part.trim().split('=');
         return [key, value];
     }));
 
-    if (!parts.v1 || !parts.ts) return false;
+    if (!parts.v1 || !parts.ts) {
+        console.warn(`[MP-WEBHOOK] Assinatura mal formatada, faltam v1 ou ts`);
+        return false;
+    }
 
     const manifest = `id:${dataId};request-id:${requestId};ts:${parts.ts};`;
     const expected = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
     const received = Buffer.from(parts.v1, 'utf8');
     const calculated = Buffer.from(expected, 'utf8');
 
-    return received.length === calculated.length && crypto.timingSafeEqual(received, calculated);
+    const isValid = received.length === calculated.length && crypto.timingSafeEqual(received, calculated);
+    
+    if (!isValid) {
+        console.error(`[MP-WEBHOOK] Assinatura inválida! Esperado:`, expected.substring(0, 20) + '...', 'Recebido:', parts.v1.substring(0, 20) + '...');
+    } else {
+        console.log(`[MP-WEBHOOK] ✓ Assinatura validada com sucesso`);
+    }
+    
+    return isValid;
 }
 
 module.exports = { criarPreferencia, consultarPagamento, validarAssinaturaWebhook };

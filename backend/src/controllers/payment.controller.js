@@ -31,7 +31,21 @@ async function webhook(req, res) {
     const signature = req.headers['x-signature'];
     const requestId = req.headers['x-request-id'];
 
+    console.log('[WEBHOOK] Recebido:', { 
+        dataId, 
+        hasSignature: !!signature, 
+        hasRequestId: !!requestId,
+        type: req.body?.type,
+        nodeEnv: process.env.NODE_ENV
+    });
+
     if (!validarAssinaturaWebhook({ signature, requestId, dataId })) {
+        console.error('[WEBHOOK] Validação de assinatura falhou:', { 
+            hasSecret: !!process.env.MERCADO_PAGO_WEBHOOK_SECRET,
+            signature: signature?.substring(0, 20) + '...',
+            requestId,
+            dataId
+        });
         return res.status(401).json({ erro: 'Webhook não autorizado.' });
     }
 
@@ -66,12 +80,18 @@ async function webhook(req, res) {
             where: { eventKey },
             data: { status: 'PROCESSED', processedAt: new Date(), attempts: { increment: 1 } },
         });
+        console.info(`[WEBHOOK] Pagamento ${dataId} processado com sucesso.`);
         return res.status(200).json({ ok: true });
     } catch (error) {
-        console.error('Erro ao processar webhook de pagamento:', error.message);
+        console.error(`[WEBHOOK] Erro ao processar pagamento ${dataId}:`, {
+            message: error.message,
+            code: error.code,
+            status: error.status,
+            stack: error.stack
+        });
         await prisma.webhookEvent.update({
             where: { eventKey },
-            data: { status: 'FAILED', lastError: 'Falha ao confirmar pagamento.', attempts: { increment: 1 } },
+            data: { status: 'FAILED', lastError: error.message, attempts: { increment: 1 } },
         }).catch(() => {});
         return res.status(error.status && error.status < 500 ? error.status : 500).json({ erro: 'Webhook não processado.' });
     }
