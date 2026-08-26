@@ -1,6 +1,5 @@
 const prisma = require('../lib/prisma');
 const validarRedacao = require('../validators/redacao.validator');
-const { reservarCreditoNaTransacao } = require('./credit.service');
 
 async function criarRedacaoAutorizada({ userId, tema, texto }) {
     const validacao = validarRedacao({ tema, texto });
@@ -11,13 +10,15 @@ async function criarRedacaoAutorizada({ userId, tema, texto }) {
         throw error;
     }
 
-    return prisma.$transaction(async (tx) => {
-        const redacao = await tx.redacao.create({
-            data: { userId, tema, texto },
-        });
-        const consumo = await reservarCreditoNaTransacao(tx, userId, redacao.id);
-        return { redacao, consumo };
+    // ✅ NÃO desconta crédito aqui - apenas cria a redação
+    // O desconto é controlado em executarCorrecao() após triagens passarem
+    const redacao = await prisma.redacao.create({
+        data: { userId, tema, texto },
     });
+
+    console.log(`[SUBMISSION] Redação ${redacao.id} criada para userId ${userId}. Crédito será descontado apenas após triagens serem aprovadas.`);
+
+    return { redacao, consumo: null };
 }
 
 module.exports = { criarRedacaoAutorizada };

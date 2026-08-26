@@ -59,13 +59,15 @@ async function criarEExecutarCorrecao(req, res) {
     let redacaoCriada = null;
     try {
         const { tema, texto } = req.body || {};
-        const { redacao, consumo } = await criarRedacaoAutorizada({
+        const { redacao } = await criarRedacaoAutorizada({
             userId: req.user.id,
             tema,
             texto,
         });
         redacaoCriada = redacao;
-        const resultado = await executarCorrecao(redacao.id, req.user.id, consumo);
+        
+        // ✅ NÃO passa consumo - executarCorrecao() fará o desconto após triagens passarem
+        const resultado = await executarCorrecao(redacao.id, req.user.id);
         return res.status(201).json(resultado);
     } catch (error) {
         if (redacaoCriada) {
