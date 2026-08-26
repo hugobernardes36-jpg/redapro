@@ -266,7 +266,7 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
     let consumo = null;
     let cotaConsumida = false;
     try {
-        consumo = consumoInicial || await reservarCredito(userId, redacao.id);
+        // NÃO reservar crédito ainda - primeiro fazer as triagens (backend + IA)
 
         // A partir daqui há uma chamada real à OpenAI, portanto consome a cota diária do usuário.
         const cotaDisponivel = await consumirCotaDiaria(userId);
@@ -283,6 +283,8 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
         });
 
         if (!validarTriagem(triagem)) {
+            // Falha na triagem da IA - reverte cota sem ter consumido créditos
+            await reverterCotaDiaria(userId);
             throw new Error('A triagem da IA possui formato inválido');
         }
 
@@ -297,11 +299,15 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
                 explicacao: triagem.explicacao || mapearMotivoHumano(triagem.motivo),
             };
 
+            // Falha na triagem da IA - não reserva créditos
             await salvarCorrecao(redacao.id, resultado);
-            await reverterConsumo(consumo.id);
             await reverterCotaDiaria(userId);
             return resultado;
         }
+
+        // ✅ APENAS AGORA que passamos em ambas as triagens (backend + IA), reservamos o crédito
+        console.log(`[CREDIT] Redação ${redacao.id} passou em ambas as triagens. Reservando crédito para userId ${userId}`);
+        consumo = consumoInicial || await reservarCredito(userId, redacao.id);
 
         const avaliacao = await corrigirRedacao({
             tema: redacao.tema,
@@ -328,13 +334,16 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
 
         const correcaoSalva = await salvarCorrecao(redacao.id, resultado);
         await finalizarConsumo(consumo.id);
+        console.log(`[CREDIT] Correção finalizada com sucesso. Crédito consumido para redacaoId ${redacao.id}`);
 
         return {
             ...resultado,
             correcaoId: correcaoSalva.id,
         };
     } catch (error) {
+        // Somente reverte crédito se foi reservado
         if (consumo) {
+            console.log(`[CREDIT] Erro na correção - revertendo crédito da redacaoId ${redacao.id}`);
             await reverterConsumo(consumo.id).catch(err => {
                 console.error('Erro ao reverter consumo de crédito:', err);
             });
@@ -342,6 +351,7 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
 
         // Se ocorrer qualquer erro durante a comunicação com a IA ou validação dos dados, revertemos as cotas consumidas.
         if (cotaConsumida) {
+            console.log(`[CREDIT] Erro na correção - revertendo cota diária para userId ${userId}`);
             await reverterCotaDiaria(userId).catch(err => {
                 console.error('Erro ao reverter cota diária de IA:', err);
             });
