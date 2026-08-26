@@ -61,12 +61,14 @@ async function webhook(req, res) {
     } catch (error) {
         if (error.code === 'P2002') {
             const existing = await prisma.webhookEvent.findUnique({ where: { eventKey } });
-            if (!existing || existing.status === 'PROCESSED') {
+            if (!existing) {
                 return res.status(200).json({ ok: true });
             }
+            // Sempre permite reprocessamento - o status do pagamento pode ter mudado
+            console.log(`[WEBHOOK] WebhookEvent já existe (${existing.id}), permitindo reprocessamento. Status anterior: ${existing.status}`);
             await prisma.webhookEvent.update({
                 where: { eventKey },
-                data: { status: 'RECEIVED', lastError: null },
+                data: { status: 'RECEIVED', lastError: null, attempts: { increment: 0 } },
             });
         } else {
             console.error('Erro ao registrar webhook de pagamento:', error.message);

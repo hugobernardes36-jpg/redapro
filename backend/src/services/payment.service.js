@@ -145,6 +145,7 @@ async function processarPagamentoWebhook(paymentId) {
         return saved;
     });
 
+    // Só processa concessão de créditos se status for APPROVED
     if (status === 'APPROVED') {
         console.log(`[PAYMENT] Status APPROVED - verificando se créditos já foram concedidos para ${purchase.id}`);
         const alreadyGranted = await prisma.creditLot.findUnique({ where: { purchaseId: purchase.id } });
