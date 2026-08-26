@@ -59,6 +59,7 @@ async function criarPreferencia({ purchaseId, packageData }) {
                 pending: `${frontendUrl}/inicio?payment=pending`,
                 failure: `${frontendUrl}/inicio?payment=failure`,
             },
+            ...(frontendUrl.startsWith('https://') ? { auto_return: 'approved' } : {}),
         },
     });
 }
