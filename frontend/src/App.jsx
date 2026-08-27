@@ -11,12 +11,16 @@ import { ThemesPage } from './pages/ThemesPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { CreditsPage } from './pages/CreditsPage'
 import { LandingPage } from './pages/LandingPage'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { useAuth } from './context/AuthContext'
 import { getSafeBackPath } from './utils/navigation'
 
 const routes = {
   '/login': LoginPage,
   '/cadastro': RegisterPage,
+  '/esqueci-senha': ForgotPasswordPage,
+  '/redefinir-senha': ResetPasswordPage,
   '/inicio': DashboardPage,
   '/nova-redacao': NewEssayPage,
   '/resultado': ResultPage,
@@ -26,7 +30,7 @@ const routes = {
   '/creditos': CreditsPage,
 }
 
-const PUBLIC_ROUTES = new Set(['/login', '/cadastro', '/'])
+const PUBLIC_ROUTES = new Set(['/login', '/cadastro', '/esqueci-senha', '/redefinir-senha', '/'])
 function getEssayIdFromPath(pathname) {
   const match = pathname.match(/^\/(?:redacao|resultado)\/(\d+)$/)
   if (match) {
@@ -86,7 +90,7 @@ export default function App() {
  const { isAuthenticated, loading, logout } = useAuth()
 
  useEffect(() => {
-   if (!loading && isAuthenticated && PUBLIC_ROUTES.has(router.path)) {
+  if (!loading && isAuthenticated && PUBLIC_ROUTES.has(router.path) && router.path !== '/redefinir-senha') {
      router.replace('/inicio')
    }
  }, [isAuthenticated, loading, router])
@@ -109,6 +113,12 @@ export default function App() {
    }
    if (router.path === '/login') {
      return <LoginPage navigate={router.navigate} />
+   }
+   if (router.path === '/esqueci-senha') {
+     return <ForgotPasswordPage navigate={router.navigate} />
+   }
+   if (router.path === '/redefinir-senha') {
+     return <ResetPasswordPage navigate={router.navigate} />
    }
    return <LandingPage navigate={router.navigate} />
  }

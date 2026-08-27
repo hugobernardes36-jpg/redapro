@@ -95,6 +95,13 @@ function validarAssinaturaWebhook({ signature, requestId, dataId }) {
         return false;
     }
 
+    const timestamp = Number(parts.ts);
+    const now = Math.floor(Date.now() / 1000);
+    if (!Number.isInteger(timestamp) || Math.abs(now - timestamp) > 5 * 60) {
+        console.warn('[MP-WEBHOOK] Assinatura fora da janela de validade');
+        return false;
+    }
+
     const manifest = `id:${dataId};request-id:${requestId};ts:${parts.ts};`;
     const expected = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
     const received = Buffer.from(parts.v1, 'utf8');

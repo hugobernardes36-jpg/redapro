@@ -42,9 +42,8 @@ async function webhook(req, res) {
     if (!validarAssinaturaWebhook({ signature, requestId, dataId })) {
         console.error('[WEBHOOK] Validação de assinatura falhou:', { 
             hasSecret: !!process.env.MERCADO_PAGO_WEBHOOK_SECRET,
-            signature: signature?.substring(0, 20) + '...',
-            requestId,
-            dataId
+            hasRequestId: !!requestId,
+            hasDataId: !!dataId
         });
         return res.status(401).json({ erro: 'Webhook não autorizado.' });
     }
@@ -88,8 +87,7 @@ async function webhook(req, res) {
         console.error(`[WEBHOOK] Erro ao processar pagamento ${dataId}:`, {
             message: error.message,
             code: error.code,
-            status: error.status,
-            stack: error.stack
+            status: error.status
         });
         await prisma.webhookEvent.update({
             where: { eventKey },

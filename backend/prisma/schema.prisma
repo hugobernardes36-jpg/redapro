@@ -21,9 +21,9 @@ model User {
   googleId                  String?    @unique
   tokenVersion              Int        @default(0)
   emailVerified             Boolean    @default(false)
-  emailVerificationToken    String?    @unique
+  emailVerificationTokenHash String?   @unique
   emailVerificationExpires  DateTime?
-  passwordResetToken        String?    @unique
+  passwordResetTokenHash    String?    @unique
   passwordResetExpires      DateTime?
   createdAt                 DateTime   @default(now())
   updatedAt                 DateTime   @default(now()) @updatedAt
@@ -92,6 +92,7 @@ enum CreditLotType {
 enum CreditLedgerType {
   FREE_GRANT
   PURCHASE_GRANT
+  PURCHASE_REVERSAL
   CONSUMPTION
   CONSUMPTION_REVERSAL
 }

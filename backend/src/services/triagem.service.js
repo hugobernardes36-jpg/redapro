@@ -25,6 +25,13 @@ module.exports = {
 };
 
 function verificarTamanhoTexto(texto) {
+    if (typeof texto !== 'string' || texto.trim().length > 15000) {
+        return {
+            valido: false,
+            motivo: 'A redação excede o limite máximo de 15.000 caracteres.'
+        };
+    }
+
     const palavras = texto
         .trim()
         .split(/\s+/)

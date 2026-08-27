@@ -1,16 +1,18 @@
 function validarRedacao({ tema, texto }) {
     const erros = [];
 
-    if (!tema || tema.trim().length === 0) {
+    if (typeof tema !== 'string' || tema.trim().length === 0) {
         erros.push('O tema da redação é obrigatório.');
+    } else if (tema.trim().length > 300) {
+        erros.push('O tema da redação não pode exceder 300 caracteres.');
     }
 
-    if (!texto || texto.trim().length === 0) {
+    if (typeof texto !== 'string' || texto.trim().length === 0) {
         erros.push('O texto da redação é obrigatório.');
-    }
-
-    if (texto && texto.trim().length < 100) {
+    } else if (texto.trim().length < 100) {
         erros.push('A redação precisa ter pelo menos 100 caracteres.');
+    } else if (texto.trim().length > 15000) {
+        erros.push('A redação não pode exceder 15.000 caracteres.');
     }
 
     if (erros.length > 0) {

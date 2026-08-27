@@ -5,10 +5,11 @@ const authService = require('../services/auth.service');
 const { CSRF_COOKIE_NAME } = require('../middlewares/csrf.middleware');
 const { SESSION_COOKIE_NAME } = require('../middlewares/auth.middleware');
 const prisma = require('../lib/prisma');
+const { sendPasswordResetEmail } = require('../services/email.service');
 const isProduction = process.env.NODE_ENV === 'production';
 
 let JWT_SECRET = process.env.JWT_SECRET;
-if (isProduction && !JWT_SECRET) {
+if (isProduction && (!JWT_SECRET || JWT_SECRET === 'dev-secret-change-me')) {
     throw new Error('JWT_SECRET não está definido nas variáveis de ambiente em produção.');
 }
 if (!JWT_SECRET) {
@@ -53,6 +54,24 @@ function setSessionCookie(res, token) {
     res.cookie(SESSION_COOKIE_NAME, token, SESSION_COOKIE_OPTIONS);
 }
 
+function validarSenha(password) {
+    const senha = typeof password === 'string' ? password : '';
+    if (senha.trim().length < 8) return 'A senha deve ter pelo menos 8 caracteres.';
+    if (senha.length > 128) return 'A senha não pode exceder 128 caracteres.';
+    if (!/[0-9]/.test(senha)) return 'A senha deve conter pelo menos um número.';
+    return null;
+}
+
+function hashResetToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function respostaRecuperacao(res) {
+    return res.status(200).json({
+        message: 'Se o e-mail estiver cadastrado, enviaremos instruções para recuperação.',
+    });
+}
+
 async function registrar(req, res) {
     try {
         const { name, email, password } = req.body || {};
@@ -61,12 +80,9 @@ async function registrar(req, res) {
             return res.status(400).json({ erro: 'Nome, e-mail e senha são obrigatórios.' });
         }
 
-        if (String(password).trim().length < 8) {
-            return res.status(400).json({ erro: 'A senha deve ter pelo menos 8 caracteres.' });
-        }
-
-        if (!/[0-9]/.test(String(password))) {
-            return res.status(400).json({ erro: 'A senha deve conter pelo menos um número.' });
+        const erroSenha = validarSenha(password);
+        if (erroSenha) {
+            return res.status(400).json({ erro: erroSenha });
         }
 
         const emailNormalizado = authService.normalizarEmail(email);
@@ -83,6 +99,9 @@ async function registrar(req, res) {
             password: senhaHash,
         });
 
+        const token = emitirTokenSessao(usuario);
+        setSessionCookie(res, token);
+
         return res.status(201).json({
             message: 'Conta criada com sucesso.',
             usuario: authService.paraRespostaPublica(usuario),
@@ -91,6 +110,69 @@ async function registrar(req, res) {
         console.error('Erro ao registrar usuário:', error.message);
         return res.status(500).json({ erro: 'Erro ao criar conta.' });
     }
+}
+
+async function solicitarRedefinicaoSenha(req, res) {
+    const email = req.body?.email;
+    if (typeof email !== 'string' || email.trim().length < 3 || email.length > 254) {
+        return respostaRecuperacao(res);
+    }
+
+    const emailNormalizado = authService.normalizarEmail(email);
+    const usuario = await authService.buscarUsuarioPorEmail(emailNormalizado);
+    if (!usuario) return respostaRecuperacao(res);
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = hashResetToken(token);
+    await prisma.user.update({
+        where: { id: usuario.id },
+        data: {
+            passwordResetTokenHash: tokenHash,
+            passwordResetExpires: new Date(Date.now() + 30 * 60 * 1000),
+        },
+    });
+
+    try {
+        await sendPasswordResetEmail({ email: usuario.email, token });
+    } catch (error) {
+        await prisma.user.update({
+            where: { id: usuario.id },
+            data: { passwordResetTokenHash: null, passwordResetExpires: null },
+        }).catch(() => {});
+        console.error('Falha ao enviar e-mail de recuperação:', error.code || error.message);
+    }
+
+    return respostaRecuperacao(res);
+}
+
+async function redefinirSenha(req, res) {
+    const token = req.body?.token;
+    const password = req.body?.password;
+    const erroSenha = validarSenha(password);
+    if (typeof token !== 'string' || !/^[a-f0-9]{64}$/i.test(token) || erroSenha) {
+        return res.status(400).json({ erro: erroSenha || 'Token de recuperação inválido.' });
+    }
+
+    const tokenHash = hashResetToken(token);
+    const senhaHash = await bcrypt.hash(password, 12);
+    const atualizado = await prisma.user.updateMany({
+        where: {
+            passwordResetTokenHash: tokenHash,
+            passwordResetExpires: { gt: new Date() },
+        },
+        data: {
+            password: senhaHash,
+            passwordResetTokenHash: null,
+            passwordResetExpires: null,
+            tokenVersion: { increment: 1 },
+        },
+    });
+
+    if (atualizado.count !== 1) {
+        return res.status(400).json({ erro: 'Token de recuperação inválido ou expirado.' });
+    }
+
+    return res.status(200).json({ message: 'Senha redefinida com sucesso. Faça login novamente.' });
 }
 
 async function login(req, res) {
@@ -168,4 +250,6 @@ module.exports = {
     login,
     logout,
     registrar,
+    solicitarRedefinicaoSenha,
+    redefinirSenha,
 };

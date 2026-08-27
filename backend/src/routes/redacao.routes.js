@@ -15,11 +15,12 @@ const {
 
 const { requireAuth } = require('../middlewares/auth.middleware');
 const { csrfProtection } = require('../middlewares/csrf.middleware');
-const { aiRateLimiterPerUser, aiRateLimiterPerIp } = require('../middlewares/rateLimit.middleware');
+const { readRateLimiter, aiRateLimiterPerUser, aiRateLimiterPerIp } = require('../middlewares/rateLimit.middleware');
 
 // Todas as rotas de redação exigem um usuário autenticado + token CSRF válido para métodos de escrita.
 router.use(requireAuth);
 router.use(csrfProtection);
+router.use(readRateLimiter);
 
 // GET /api/redacoes — listar redações do usuário autenticado
 router.get('/', listarRedacoes);

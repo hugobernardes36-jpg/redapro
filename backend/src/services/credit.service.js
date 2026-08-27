@@ -186,6 +186,33 @@ async function concederCreditos({ userId, purchaseId, credits }) {
     });
 }
 
+async function revogarCreditosCompra(purchaseId) {
+    return prisma.$transaction(async (tx) => {
+        const lot = await tx.creditLot.findUnique({ where: { purchaseId } });
+        if (!lot || lot.quantityRemaining <= 0) return lot;
+
+        const amount = lot.quantityRemaining;
+        await tx.creditLot.update({
+            where: { id: lot.id },
+            data: { quantityRemaining: 0 },
+        });
+        await tx.creditLedgerEntry.create({
+            data: {
+                idempotencyKey: createLedgerKey('purchase-reversal', purchaseId),
+                userId: lot.userId,
+                creditLotId: lot.id,
+                type: 'PURCHASE_REVERSAL',
+                amount: -amount,
+                purchaseId,
+            },
+        });
+        return lot;
+    }).catch((error) => {
+        if (error.code === 'P2002') return null;
+        throw error;
+    });
+}
+
 module.exports = {
     FREE_CREDITS,
     criarLoteGratuito,
@@ -195,4 +222,5 @@ module.exports = {
     finalizarConsumo,
     reverterConsumo,
     concederCreditos,
+    revogarCreditosCompra,
 };

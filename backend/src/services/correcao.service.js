@@ -175,6 +175,7 @@ function mapearMotivoHumano(motivo) {
         fuga_ao_tema: 'A redação fugiu do tema proposto.',
         texto_sem_sentido: 'O texto não apresenta sentido e coerência suficientes para uma correção.',
         texto_insuficiente: 'A redação não possui desenvolvimento suficiente para ser corrigida.',
+        'A redação excede o limite máximo de 15.000 caracteres.': 'A redação excede o limite máximo permitido.',
         nao_dissertativo_argumentativo: 'A redação não tem estrutura dissertativo-argumentativa adequada.',
         conteudo_inadequado: 'O conteúdo da redação não atende aos critérios mínimos para correção.'
     };
@@ -228,6 +229,21 @@ async function salvarCorrecao(redacaoId, payload) {
 
 async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
     const redacao = await buscarRedacao(redacaoId, userId);
+
+    const correcaoExistente = await prisma.correcao.findUnique({
+        where: { redacaoId: redacao.id },
+    });
+    if (correcaoExistente) {
+        return {
+            redacaoId: redacao.id,
+            status: correcaoExistente.status,
+            notaFinal: correcaoExistente.notaFinal,
+            correcaoId: correcaoExistente.id,
+            ...((correcaoExistente.dadosIa && typeof correcaoExistente.dadosIa === 'object')
+                ? correcaoExistente.dadosIa
+                : {}),
+        };
+    }
 
     const textoBasico = verificarTextoBasico(redacao.texto);
 

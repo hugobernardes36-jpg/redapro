@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { getCreditPackage } = require('../config/creditPackages.config');
 const { criarPreferencia, consultarPagamento } = require('./mercadoPago.service');
-const { concederCreditos } = require('./credit.service');
+const { concederCreditos, revogarCreditosCompra } = require('./credit.service');
 
 function paymentStatus(status) {
     const map = {
@@ -167,6 +167,9 @@ async function processarPagamentoWebhook(paymentId) {
         } else {
             console.log(`[PAYMENT] Créditos já foram concedidos anteriormente: ${alreadyGranted.id}`);
         }
+    } else if (['REFUNDED', 'CHARGEBACK', 'CANCELLED'].includes(status)) {
+        await revogarCreditosCompra(purchase.id);
+        console.log(`[PAYMENT] Créditos restantes revogados para a compra ${purchase.id}`);
     } else {
         console.log(`[PAYMENT] Status ${status} - créditos NÃO serão concedidos`);
     }

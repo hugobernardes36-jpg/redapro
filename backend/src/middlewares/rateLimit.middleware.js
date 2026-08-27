@@ -15,6 +15,23 @@ const authRateLimiter = rateLimit({
     message: { erro: 'Muitas tentativas. Tente novamente mais tarde.' },
 });
 
+const readRateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => req.user?.id ? `user:${req.user.id}` : ipKeyGenerator(req.ip),
+    message: { erro: 'Muitas requisições. Aguarde alguns instantes antes de tentar novamente.' },
+});
+
+const passwordResetRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { erro: 'Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.' },
+});
+
 // Limita, por usuário autenticado, requisições aos endpoints que geram custo com a OpenAI
 // (criação e correção de redação), independentemente do IP de origem.
 const aiRateLimiterPerUser = rateLimit({
@@ -35,4 +52,4 @@ const aiRateLimiterPerIp = rateLimit({
     message: { erro: 'Muitas requisições. Aguarde alguns instantes antes de tentar novamente.' },
 });
 
-module.exports = { authRateLimiter, aiRateLimiterPerUser, aiRateLimiterPerIp };
+module.exports = { authRateLimiter, readRateLimiter, passwordResetRateLimiter, aiRateLimiterPerUser, aiRateLimiterPerIp };
