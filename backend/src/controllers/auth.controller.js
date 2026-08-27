@@ -118,11 +118,8 @@ async function registrar(req, res) {
             console.error('Falha ao enviar e-mail de verificação:', error.code || error.message);
         }
 
-        const token = emitirTokenSessao(usuario);
-        setSessionCookie(res, token);
-
         return res.status(201).json({
-            message: 'Conta criada com sucesso.',
+            message: 'Conta criada. Confirme seu e-mail antes de entrar.',
             usuario: authService.paraRespostaPublica(usuario),
         });
     } catch (error) {
@@ -220,7 +217,10 @@ async function verificarEmail(req, res) {
 }
 
 async function reenviarVerificacao(req, res) {
-    const usuario = await authService.buscarUsuarioPorId(req.user.id);
+    const email = req.user?.email || req.body?.email;
+    const usuario = typeof email === 'string'
+        ? await authService.buscarUsuarioPorEmail(email)
+        : null;
     if (!usuario || usuario.emailVerified) {
         return res.status(200).json({ message: 'Se necessário, enviaremos um novo link de verificação.' });
     }
@@ -253,6 +253,10 @@ async function login(req, res) {
         const senhaValida = await bcrypt.compare(String(password), usuario.password || '');
         if (!senhaValida) {
             return res.status(401).json({ erro: 'Credenciais inválidas.' });
+        }
+
+        if (!usuario.emailVerified) {
+            return res.status(403).json({ erro: 'Confirme seu e-mail antes de entrar na aplicação.' });
         }
 
         const token = emitirTokenSessao(usuario);

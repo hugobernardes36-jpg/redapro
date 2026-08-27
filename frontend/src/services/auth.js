@@ -20,8 +20,11 @@ export async function redefinirSenha(token, password) {
   return data
 }
 
-export async function reenviarVerificacao() {
-  const response = await apiFetch('/api/auth/resend-verification', { method: 'POST' })
+export async function reenviarVerificacao(email) {
+  const response = await apiFetch('/api/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(data.erro || 'Não foi possível reenviar o e-mail.')
   return data

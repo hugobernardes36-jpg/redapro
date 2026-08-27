@@ -29,7 +29,7 @@ export function RegisterPage({ navigate }) {
 
     try {
       await register(form.name, form.email, form.password)
-      setSucesso('Conta criada com sucesso. Você pode entrar agora.')
+      setSucesso('Conta criada. Confirme seu e-mail para entrar na aplicação.')
       setTimeout(() => navigate('/login'), 900)
     } catch (error) {
       setErro(error.message || 'Não foi possível criar a conta.')

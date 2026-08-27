@@ -62,6 +62,7 @@ export function LoginPage({ navigate }) {
             <button type="submit" className={styles.submit} disabled={enviando}>{enviando ? 'Entrando...' : 'Entrar'}</button>
           </form>
           <button type="button" className={styles.forgot} onClick={() => navigate('/esqueci-senha')}>Esqueci minha senha</button>
+          <button type="button" className={styles.forgot} onClick={() => navigate('/reenviar-verificacao')}>Reenviar confirmação de e-mail</button>
           <p className={styles.signup}>Ainda não tem conta? <button type="button" onClick={() => navigate('/cadastro')}>Crie uma agora</button></p>
         </div>
       </main>

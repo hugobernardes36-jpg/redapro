@@ -14,7 +14,7 @@ router.post('/login', authRateLimiter, login);
 router.post('/forgot-password', passwordResetRateLimiter, solicitarRedefinicaoSenha);
 router.post('/reset-password', passwordResetRateLimiter, redefinirSenha);
 router.get('/verify-email', passwordResetRateLimiter, verificarEmail);
-router.post('/resend-verification', requireAuth, passwordResetRateLimiter, csrfProtection, reenviarVerificacao);
+router.post('/resend-verification', passwordResetRateLimiter, csrfProtection, reenviarVerificacao);
 router.post('/logout', csrfProtection, logout);
 
 module.exports = router;

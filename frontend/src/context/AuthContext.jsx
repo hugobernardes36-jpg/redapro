@@ -50,7 +50,6 @@ export function AuthProvider({ children }) {
       throw new Error(data.erro || 'Não foi possível criar a conta.')
     }
 
-    setUser(data.usuario || null)
     return data
   }, [])
 
@@ -62,8 +61,8 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const reenviarVerificacao = useCallback(async () => {
-    return enviarVerificacao()
+  const reenviarVerificacao = useCallback(async (email) => {
+    return enviarVerificacao(email)
   }, [])
 
   const value = useMemo(() => ({

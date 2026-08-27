@@ -29,7 +29,7 @@ export function VerifyEmailPage({ navigate }) {
         <div className={styles.mobileLogo}><Logo /></div>
         <h2>{status === 'confirmando' ? 'Confirmando e-mail' : status === 'sucesso' ? 'E-mail confirmado' : 'Link inválido'}</h2>
         <p className={styles.subtitle}>{status === 'confirmando' ? 'Aguarde enquanto validamos seu link.' : mensagem}</p>
-        {status !== 'confirmando' && <button type="button" className={styles.submit} onClick={() => navigate('/inicio')}>{status === 'sucesso' ? 'Ir para a aplicação' : 'Voltar para o login'}</button>}
+        {status !== 'confirmando' && <button type="button" className={styles.submit} onClick={() => navigate('/login')}>{status === 'sucesso' ? 'Ir para o login' : 'Voltar para o login'}</button>}
       </div></main>
     </div>
   )

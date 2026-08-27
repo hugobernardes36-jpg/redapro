@@ -26,6 +26,10 @@ async function requireAuth(req, res, next) {
             return res.status(401).json({ erro: 'Sessão inválida ou expirada.' });
         }
 
+        if (!user.emailVerified) {
+            return res.status(403).json({ erro: 'Confirme seu e-mail para acessar a aplicação.' });
+        }
+
         req.user = {
             id: user.id,
             email: user.email,

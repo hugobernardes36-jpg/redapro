@@ -14,6 +14,7 @@ import { LandingPage } from './pages/LandingPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { VerifyEmailPage } from './pages/VerifyEmailPage'
+import { ResendVerificationPage } from './pages/ResendVerificationPage'
 import { useAuth } from './context/AuthContext'
 import { getSafeBackPath } from './utils/navigation'
 
@@ -23,6 +24,7 @@ const routes = {
   '/esqueci-senha': ForgotPasswordPage,
   '/redefinir-senha': ResetPasswordPage,
   '/verificar-email': VerifyEmailPage,
+  '/reenviar-verificacao': ResendVerificationPage,
   '/inicio': DashboardPage,
   '/nova-redacao': NewEssayPage,
   '/resultado': ResultPage,
@@ -32,7 +34,7 @@ const routes = {
   '/creditos': CreditsPage,
 }
 
-const PUBLIC_ROUTES = new Set(['/login', '/cadastro', '/esqueci-senha', '/redefinir-senha', '/verificar-email', '/'])
+const PUBLIC_ROUTES = new Set(['/login', '/cadastro', '/esqueci-senha', '/redefinir-senha', '/verificar-email', '/reenviar-verificacao', '/'])
 function getEssayIdFromPath(pathname) {
   const match = pathname.match(/^\/(?:redacao|resultado)\/(\d+)$/)
   if (match) {
@@ -124,6 +126,9 @@ export default function App() {
    }
    if (router.path === '/verificar-email') {
      return <VerifyEmailPage navigate={router.navigate} />
+   }
+   if (router.path === '/reenviar-verificacao') {
+     return <ResendVerificationPage navigate={router.navigate} />
    }
    return <LandingPage navigate={router.navigate} />
  }
