@@ -42,6 +42,12 @@ async function sendPasswordResetEmail({ email, token }) {
     });
 
     if (error) {
+        console.error('Resend rejeitou o e-mail de recuperação:', {
+            name: error.name,
+            message: error.message,
+            statusCode: error.statusCode,
+            code: error.name || error.code,
+        });
         const serviceError = new Error('Não foi possível enviar o e-mail.');
         serviceError.code = 'EMAIL_SEND_FAILED';
         throw serviceError;
