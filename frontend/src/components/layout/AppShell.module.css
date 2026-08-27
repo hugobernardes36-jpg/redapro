@@ -1,1 +1,26 @@
-.page{min-height:100vh;background:#f8fafc}.layout{min-height:100vh;display:flex}.main{flex:1;min-width:0}@media(max-width:800px){.layout{min-height:calc(100vh - 62px)}}
+.app {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba(255,255,255,0.78), rgba(244,247,251,0.98));
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 0 40px;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    min-height: calc(100vh - 70px);
+    padding-bottom: 80px;
+  }
+
+  .main {
+    padding-top: 12px;
+  }
+}

@@ -19,6 +19,12 @@ export function RegisterPage({ navigate }) {
     event.preventDefault()
     setErro('')
     setSucesso('')
+
+    if (!/[0-9]/.test(form.password)) {
+      setErro('A senha deve conter pelo menos um número.')
+      return
+    }
+
     setEnviando(true)
 
     try {
@@ -66,7 +72,7 @@ export function RegisterPage({ navigate }) {
             <label>
               <span>Senha</span>
               <div className={styles.input}>
-                <input type="password" name="password" value={form.password} onChange={handleChange} required autoComplete="new-password" placeholder="Mínimo 8 caracteres" />
+                <input type="password" name="password" value={form.password} onChange={handleChange} required autoComplete="new-password" placeholder="Mínimo 8 caracteres e 1 número" />
               </div>
             </label>
             <button type="submit" className={styles.submit} disabled={enviando}>{enviando ? 'Criando conta...' : 'Criar conta'}</button>

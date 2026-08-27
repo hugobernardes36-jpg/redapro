@@ -65,6 +65,10 @@ async function registrar(req, res) {
             return res.status(400).json({ erro: 'A senha deve ter pelo menos 8 caracteres.' });
         }
 
+        if (!/[0-9]/.test(String(password))) {
+            return res.status(400).json({ erro: 'A senha deve conter pelo menos um número.' });
+        }
+
         const emailNormalizado = authService.normalizarEmail(email);
         const usuarioExistente = await authService.buscarUsuarioPorEmail(emailNormalizado);
 

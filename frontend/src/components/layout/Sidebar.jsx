@@ -14,12 +14,35 @@ const items = [
 
 export function Sidebar({ currentPath, navigate, onLogout }) {
   const go = (to) => navigate(to)
-  return <aside className={styles.sidebar}>
-    <Logo />
-    <CreditBalance navigate={navigate} />
-    <nav className={styles.nav} aria-label="Navegação principal">
-      {items.map(([label, icon, to]) => <button key={to} type="button" className={`${styles.item} ${currentPath === to ? styles.active : ''}`} onClick={() => go(to)}><Icon name={icon} size={18}/><span>{label}</span></button>)}
-    </nav>
-    <button className={styles.logout} type="button" onClick={() => (onLogout ? onLogout() : go('/login'))}><Icon name="logout" size={18}/><span>Sair</span></button>
-  </aside>
+
+  return (
+    <aside className={styles.sidebar}>
+      <div className={styles.brandWrap}>
+        <Logo />
+      </div>
+
+      <div className={styles.balanceWrap}>
+        <CreditBalance navigate={navigate} />
+      </div>
+
+      <nav className={styles.nav} aria-label="Navegação principal">
+        {items.map(([label, icon, to]) => (
+          <button
+            key={to}
+            type="button"
+            className={`${styles.item} ${currentPath === to ? styles.active : ''}`}
+            onClick={() => go(to)}
+          >
+            <span className={styles.iconBox}><Icon name={icon} size={16} /></span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+
+      <button className={styles.logout} type="button" onClick={() => (onLogout ? onLogout() : go('/login'))}>
+        <span className={styles.iconBox}><Icon name="logout" size={16} /></span>
+        <span>Sair</span>
+      </button>
+    </aside>
+  )
 }

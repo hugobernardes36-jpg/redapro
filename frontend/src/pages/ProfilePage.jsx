@@ -15,5 +15,41 @@ export function ProfilePage({ navigate }) {
    navigate('/login')
  }
 
- return <PageContainer><BackButton to={getSafeBackPath(window.location.pathname)} onClick={()=>navigate(getSafeBackPath(window.location.pathname))}/><PageHeader title="Perfil" description="Suas informações pessoais e preferências."/><section className={styles.profile}><div className={styles.avatar}><Icon name="user" size={27}/></div><div><h2>{user?.name}</h2><p>{user?.email}</p></div></section><form className={styles.form} onSubmit={(e)=>e.preventDefault()}><label><span>Nome</span><input defaultValue={user?.name} readOnly/></label><label><span>E-mail</span><input defaultValue={user?.email} type="email" readOnly/></label><div className={styles.preferences}><h3>Preferências</h3><label className={styles.check}><input type="checkbox" defaultChecked/><span>Receber lembretes de estudo</span></label></div><div className={styles.actions}><Button variant="secondary" type="button" onClick={handleLogout}>Sair da conta</Button></div></form></PageContainer>
+ return (
+   <PageContainer>
+     <BackButton 
+       to={getSafeBackPath(window.location.pathname)} 
+       onClick={() => navigate(getSafeBackPath(window.location.pathname))}
+     />
+     <PageHeader title="Perfil" description="Suas informações pessoais." />
+     
+     <section className={styles.profile}>
+       <div className={styles.avatar}>
+         <Icon name="user" size={32} />
+       </div>
+       <div className={styles.userInfo}>
+         <h2>{user?.name}</h2>
+         <p>{user?.email}</p>
+       </div>
+     </section>
+     
+     <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
+       <div className={styles.formGroup}>
+         <label htmlFor="profile-name">Nome</label>
+         <input id="profile-name" defaultValue={user?.name} readOnly />
+       </div>
+       
+       <div className={styles.formGroup}>
+         <label htmlFor="profile-email">E-mail</label>
+         <input id="profile-email" defaultValue={user?.email} type="email" readOnly />
+       </div>
+       
+       <div className={styles.actions}>
+         <Button variant="danger" type="button" onClick={handleLogout}>
+           Sair da conta
+         </Button>
+       </div>
+     </form>
+   </PageContainer>
+ )
 }

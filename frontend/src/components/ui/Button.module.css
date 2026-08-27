@@ -1,1 +1,72 @@
-.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;transition:160ms ease;text-decoration:none}.md{min-height:40px;padding:0 15px}.lg{min-height:48px;padding:0 22px;font-size:13px}.primary{color:#fff;background:#2563eb;box-shadow:0 7px 15px rgba(37,99,235,.15)}.primary:hover{background:#1d4ed8;transform:translateY(-1px)}.secondary{color:#334155;background:#fff;border-color:#dbe3ec}.secondary:hover{background:#f8fafc;border-color:#cbd5e1}.ghost{color:#64748b;background:transparent}.ghost:hover{color:#2563eb;background:#eff6ff}.danger{color:#b91c1c;background:#fff1f2;border-color:#fecdd3}.button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  text-decoration: none;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.md {
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.lg {
+  min-height: 48px;
+  padding: 0 22px;
+  font-size: 0.8125rem;
+}
+
+.primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  box-shadow: 0 12px 24px rgba(49, 94, 251, 0.18);
+}
+
+.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+  transform: translateY(-1px);
+}
+
+.secondary {
+  color: var(--text-700);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.secondary:hover:not(:disabled) {
+  background: rgba(248, 250, 252, 1);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.ghost {
+  color: var(--text-700);
+  background: transparent;
+}
+
+.ghost:hover:not(:disabled) {
+  background: rgba(49, 94, 251, 0.04);
+  color: var(--primary-600);
+}
+
+.danger {
+  color: var(--danger-600);
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.12);
+}
+
+.danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+}

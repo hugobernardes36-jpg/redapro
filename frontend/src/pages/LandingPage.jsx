@@ -391,7 +391,7 @@ export function LandingPage({ navigate }) {
 
           <div className={styles.trialBlock}>
             <p className={styles.trialTitle}>Comece grátis</p>
-            <p className={styles.trialText}>3 correções grátis para começar. Depois de utilizar as três correções gratuitas, você pode continuar pagando por correção ou adquirindo pacotes de correções.</p>
+            <p className={styles.trialText}>2 correções grátis para começar. Depois de utilizar as duas correções gratuitas, você pode continuar pagando por correção ou adquirindo pacotes de correções.</p>
           </div>
 
           <p className={styles.pricingNote}>
