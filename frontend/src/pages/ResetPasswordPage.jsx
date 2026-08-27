@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Logo } from '../components/ui/Logo'
 import { redefinirSenha } from '../services/auth'
 import styles from './LoginPage.module.css'
@@ -10,6 +10,10 @@ export function ResetPasswordPage({ navigate }) {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [enviando, setEnviando] = useState(false)
+
+  useEffect(() => {
+    window.history.replaceState({}, '', '/redefinir-senha')
+  }, [])
 
   async function handleSubmit(event) {
     event.preventDefault()

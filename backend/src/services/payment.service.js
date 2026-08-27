@@ -55,14 +55,11 @@ async function criarCompra(userId, packageId) {
 }
 
 async function processarPagamentoWebhook(paymentId) {
-    console.log(`[PAYMENT] Iniciando processamento do pagamento ${paymentId}`);
+    console.log('[PAYMENT] Iniciando processamento do pagamento.');
     
     const remotePayment = await consultarPagamento(paymentId);
-    console.log(`[PAYMENT] Dados recebidos do Mercado Pago:`, {
-        id: remotePayment.id,
+    console.log('[PAYMENT] Status recebido do Mercado Pago:', {
         status: remotePayment.status,
-        external_reference: remotePayment.external_reference,
-        transaction_amount: remotePayment.transaction_amount,
         currency_id: remotePayment.currency_id
     });
 

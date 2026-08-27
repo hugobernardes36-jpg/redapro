@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { csrf, me, login, logout, registrar } = require('../controllers/auth.controller');
+const { csrf, me, login, logout, registrar, verificarEmail, reenviarVerificacao } = require('../controllers/auth.controller');
 const { requireAuth } = require('../middlewares/auth.middleware');
 const { csrfProtection } = require('../middlewares/csrf.middleware');
 const { authRateLimiter, passwordResetRateLimiter } = require('../middlewares/rateLimit.middleware');
@@ -13,6 +13,8 @@ router.post('/registrar', authRateLimiter, registrar);
 router.post('/login', authRateLimiter, login);
 router.post('/forgot-password', passwordResetRateLimiter, solicitarRedefinicaoSenha);
 router.post('/reset-password', passwordResetRateLimiter, redefinirSenha);
+router.get('/verify-email', passwordResetRateLimiter, verificarEmail);
+router.post('/resend-verification', requireAuth, passwordResetRateLimiter, csrfProtection, reenviarVerificacao);
 router.post('/logout', csrfProtection, logout);
 
 module.exports = router;

@@ -3,6 +3,33 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
+function validarConfiguracaoDeProducao() {
+  if (process.env.NODE_ENV !== 'production') return;
+
+  const required = [
+    'DATABASE_URL',
+    'JWT_SECRET',
+    'OPENAI_API_KEY',
+    'MERCADO_PAGO_ACCESS_TOKEN',
+    'MERCADO_PAGO_WEBHOOK_SECRET',
+    'RESEND_API_KEY',
+    'EMAIL_FROM',
+    'FRONTEND_URL',
+    'APP_URL',
+  ];
+  const missing = required.filter((name) => !process.env[name]?.trim());
+  const jwtSecret = process.env.JWT_SECRET || '';
+  if (jwtSecret === 'dev-secret-change-me' || jwtSecret.length < 32) {
+    missing.push('JWT_SECRET (forte, com pelo menos 32 caracteres)');
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`Configuração de produção incompleta: ${missing.join(', ')}`);
+  }
+}
+
+validarConfiguracaoDeProducao();
+
 const redacaoRoutes = require('./routes/redacao.routes');
 const authRoutes = require('./routes/auth.routes');
 const creditRoutes = require('./routes/credit.routes');

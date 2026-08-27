@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { apiFetch } from '../services/api'
+import { reenviarVerificacao as enviarVerificacao } from '../services/auth'
 
 const AuthContext = createContext(null)
 
@@ -62,7 +63,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   const reenviarVerificacao = useCallback(async () => {
-    return null
+    return enviarVerificacao()
   }, [])
 
   const value = useMemo(() => ({

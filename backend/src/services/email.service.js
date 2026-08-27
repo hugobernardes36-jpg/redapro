@@ -54,4 +54,29 @@ async function sendPasswordResetEmail({ email, token }) {
     }
 }
 
-module.exports = { sendPasswordResetEmail };
+async function sendEmailVerificationEmail({ email, token }) {
+    const { apiKey, from, appUrl } = getEmailConfig();
+    const verificationUrl = `${appUrl}/verificar-email?token=${encodeURIComponent(token)}`;
+    const resend = new Resend(apiKey);
+    const { error } = await resend.emails.send({
+        from,
+        to: [email],
+        subject: 'Confirme seu e-mail no RedaPro',
+        text: `Confirme seu e-mail acessando este link em até 24 horas: ${verificationUrl}\n\nSe você não criou esta conta, ignore este e-mail.`,
+        html: `<p>Confirme seu e-mail para ativar sua conta.</p><p><a href="${verificationUrl}">Confirmar meu e-mail</a></p><p>Este link expira em 24 horas. Se você não criou esta conta, ignore este e-mail.</p>`,
+    });
+
+    if (error) {
+        console.error('Resend rejeitou o e-mail de verificação:', {
+            name: error.name,
+            message: error.message,
+            statusCode: error.statusCode,
+            code: error.name || error.code,
+        });
+        const serviceError = new Error('Não foi possível enviar o e-mail.');
+        serviceError.code = 'EMAIL_SEND_FAILED';
+        throw serviceError;
+    }
+}
+
+module.exports = { sendPasswordResetEmail, sendEmailVerificationEmail };

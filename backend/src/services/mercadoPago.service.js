@@ -110,7 +110,7 @@ function validarAssinaturaWebhook({ signature, requestId, dataId }) {
     const isValid = received.length === calculated.length && crypto.timingSafeEqual(received, calculated);
     
     if (!isValid) {
-        console.error(`[MP-WEBHOOK] Assinatura inválida! Esperado:`, expected.substring(0, 20) + '...', 'Recebido:', parts.v1.substring(0, 20) + '...');
+        console.error('[MP-WEBHOOK] Assinatura inválida.');
     } else {
         console.log(`[MP-WEBHOOK] ✓ Assinatura validada com sucesso`);
     }

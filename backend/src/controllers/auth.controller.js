@@ -5,7 +5,7 @@ const authService = require('../services/auth.service');
 const { CSRF_COOKIE_NAME } = require('../middlewares/csrf.middleware');
 const { SESSION_COOKIE_NAME } = require('../middlewares/auth.middleware');
 const prisma = require('../lib/prisma');
-const { sendPasswordResetEmail } = require('../services/email.service');
+const { sendPasswordResetEmail, sendEmailVerificationEmail } = require('../services/email.service');
 const isProduction = process.env.NODE_ENV === 'production';
 
 let JWT_SECRET = process.env.JWT_SECRET;
@@ -72,6 +72,18 @@ function respostaRecuperacao(res) {
     });
 }
 
+async function criarTokenDeVerificacao(usuarioId) {
+    const token = crypto.randomBytes(32).toString('hex');
+    await prisma.user.update({
+        where: { id: usuarioId },
+        data: {
+            emailVerificationTokenHash: hashResetToken(token),
+            emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+    });
+    return token;
+}
+
 async function registrar(req, res) {
     try {
         const { name, email, password } = req.body || {};
@@ -98,6 +110,13 @@ async function registrar(req, res) {
             email: emailNormalizado,
             password: senhaHash,
         });
+
+        try {
+            const verificationToken = await criarTokenDeVerificacao(usuario.id);
+            await sendEmailVerificationEmail({ email: usuario.email, token: verificationToken });
+        } catch (error) {
+            console.error('Falha ao enviar e-mail de verificação:', error.code || error.message);
+        }
 
         const token = emitirTokenSessao(usuario);
         setSessionCookie(res, token);
@@ -173,6 +192,47 @@ async function redefinirSenha(req, res) {
     }
 
     return res.status(200).json({ message: 'Senha redefinida com sucesso. Faça login novamente.' });
+}
+
+async function verificarEmail(req, res) {
+    const token = req.query?.token;
+    if (typeof token !== 'string' || !/^[a-f0-9]{64}$/i.test(token)) {
+        return res.status(400).json({ erro: 'Token de verificação inválido ou expirado.' });
+    }
+
+    const atualizado = await prisma.user.updateMany({
+        where: {
+            emailVerificationTokenHash: hashResetToken(token),
+            emailVerificationExpires: { gt: new Date() },
+        },
+        data: {
+            emailVerified: true,
+            emailVerificationTokenHash: null,
+            emailVerificationExpires: null,
+        },
+    });
+
+    if (atualizado.count !== 1) {
+        return res.status(400).json({ erro: 'Token de verificação inválido ou expirado.' });
+    }
+
+    return res.status(200).json({ message: 'E-mail confirmado com sucesso.' });
+}
+
+async function reenviarVerificacao(req, res) {
+    const usuario = await authService.buscarUsuarioPorId(req.user.id);
+    if (!usuario || usuario.emailVerified) {
+        return res.status(200).json({ message: 'Se necessário, enviaremos um novo link de verificação.' });
+    }
+
+    try {
+        const token = await criarTokenDeVerificacao(usuario.id);
+        await sendEmailVerificationEmail({ email: usuario.email, token });
+    } catch (error) {
+        console.error('Falha ao reenviar e-mail de verificação:', error.code || error.message);
+    }
+
+    return res.status(200).json({ message: 'Se necessário, enviaremos um novo link de verificação.' });
 }
 
 async function login(req, res) {
@@ -252,4 +312,6 @@ module.exports = {
     registrar,
     solicitarRedefinicaoSenha,
     redefinirSenha,
+    verificarEmail,
+    reenviarVerificacao,
 };
