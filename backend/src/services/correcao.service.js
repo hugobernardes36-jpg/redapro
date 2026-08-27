@@ -322,7 +322,7 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
         }
 
         // ✅ APENAS AGORA que passamos em ambas as triagens (backend + IA), reservamos o crédito
-        console.log(`[CREDIT] Redação ${redacao.id} passou em ambas as triagens. Reservando crédito para userId ${userId}`);
+        console.log('[CREDIT] Triagens aprovadas. Reservando crédito.');
         consumo = consumoInicial || await reservarCredito(userId, redacao.id);
 
         const avaliacao = await corrigirRedacao({
@@ -350,7 +350,7 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
 
         const correcaoSalva = await salvarCorrecao(redacao.id, resultado);
         await finalizarConsumo(consumo.id);
-        console.log(`[CREDIT] Correção finalizada com sucesso. Crédito consumido para redacaoId ${redacao.id}`);
+        console.log('[CREDIT] Correção finalizada com sucesso. Crédito consumido.');
 
         return {
             ...resultado,
@@ -359,7 +359,7 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
     } catch (error) {
         // Somente reverte crédito se foi reservado
         if (consumo) {
-            console.log(`[CREDIT] Erro na correção - revertendo crédito da redacaoId ${redacao.id}`);
+            console.log('[CREDIT] Erro na correção. Revertendo crédito.');
             await reverterConsumo(consumo.id).catch(err => {
                 console.error('Erro ao reverter consumo de crédito:', err);
             });
@@ -367,7 +367,7 @@ async function executarCorrecao(redacaoId, userId, consumoInicial = null) {
 
         // Se ocorrer qualquer erro durante a comunicação com a IA ou validação dos dados, revertemos as cotas consumidas.
         if (cotaConsumida) {
-            console.log(`[CREDIT] Erro na correção - revertendo cota diária para userId ${userId}`);
+            console.log('[CREDIT] Erro na correção. Revertendo cota diária.');
             await reverterCotaDiaria(userId).catch(err => {
                 console.error('Erro ao reverter cota diária de IA:', err);
             });

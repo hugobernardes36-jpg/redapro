@@ -32,7 +32,6 @@ async function webhook(req, res) {
     const requestId = req.headers['x-request-id'];
 
     console.log('[WEBHOOK] Recebido:', { 
-        dataId, 
         hasSignature: !!signature, 
         hasRequestId: !!requestId,
         type: req.body?.type,
@@ -64,7 +63,7 @@ async function webhook(req, res) {
                 return res.status(200).json({ ok: true });
             }
             // Sempre permite reprocessamento - o status do pagamento pode ter mudado
-            console.log(`[WEBHOOK] WebhookEvent já existe (${existing.id}), permitindo reprocessamento. Status anterior: ${existing.status}`);
+                console.log(`[WEBHOOK] Evento já existe. Permitindo reprocessamento. Status anterior: ${existing.status}`);
             await prisma.webhookEvent.update({
                 where: { eventKey },
                 data: { status: 'RECEIVED', lastError: null, attempts: { increment: 0 } },
@@ -81,10 +80,10 @@ async function webhook(req, res) {
             where: { eventKey },
             data: { status: 'PROCESSED', processedAt: new Date(), attempts: { increment: 1 } },
         });
-        console.info(`[WEBHOOK] Pagamento ${dataId} processado com sucesso.`);
+        console.info('[WEBHOOK] Pagamento processado com sucesso.');
         return res.status(200).json({ ok: true });
     } catch (error) {
-        console.error(`[WEBHOOK] Erro ao processar pagamento ${dataId}:`, {
+        console.error('[WEBHOOK] Erro ao processar pagamento:', {
             message: error.message,
             code: error.code,
             status: error.status

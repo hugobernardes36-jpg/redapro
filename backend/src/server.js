@@ -91,7 +91,7 @@ app.use((err, req, res, next) => {
   if (err && err.message === 'Origem não permitida pela política de CORS.') {
     return res.status(403).json({ erro: 'Origem não permitida.' });
   }
-  console.error(err);
+  console.error('Erro interno:', err.code || err.name || 'internal_error');
   return res.status(500).json({ erro: 'Erro interno do servidor.' });
 });
 

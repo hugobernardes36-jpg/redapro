@@ -47,7 +47,7 @@ async function criarRedacao(req, res) {
         return res.status(201).json(redacao);
 
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao criar redação:', error.code || error.name || 'internal_error');
 
         return res.status(500).json({
             erro: 'Erro ao criar redação'
@@ -111,7 +111,7 @@ async function listarRedacoes(req, res) {
         return res.json(resultado);
 
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao listar redações:', error.code || error.name || 'internal_error');
 
         return res.status(500).json({
             erro: 'Erro ao listar redações'
@@ -159,7 +159,7 @@ async function buscarRedacao(req, res) {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao buscar redação:', error.code || error.name || 'internal_error');
 
         return res.status(500).json({
             erro: 'Erro ao buscar redação'
@@ -194,7 +194,7 @@ async function obterEstatisticas(req, res) {
         return res.json(stats);
 
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao obter estatísticas:', error.code || error.name || 'internal_error');
 
         return res.status(500).json({
             erro: 'Erro ao obter estatísticas'

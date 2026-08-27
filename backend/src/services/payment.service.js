@@ -67,45 +67,27 @@ async function processarPagamentoWebhook(paymentId) {
     if (typeof externalReference !== 'string' || !externalReference.startsWith('redapro:')) {
         const error = new Error('Pagamento sem referência interna válida.');
         error.status = 400;
-        console.error(`[PAYMENT] Erro de referência:`, externalReference);
+        console.error('[PAYMENT] Erro de referência interna.');
         throw error;
     }
 
     const purchaseId = externalReference.slice('redapro:'.length);
-    console.log(`[PAYMENT] PurchaseId extraído: ${purchaseId}`);
-    
     const purchase = await prisma.purchase.findUnique({ where: { id: purchaseId } });
     if (!purchase) {
         const error = new Error('Compra não encontrada.');
         error.status = 404;
-        console.error(`[PAYMENT] Compra não encontrada: ${purchaseId}`);
+        console.error('[PAYMENT] Compra não encontrada.');
         throw error;
     }
     
-    console.log(`[PAYMENT] Compra encontrada:`, {
-        id: purchase.id,
-        userId: purchase.userId,
-        credits: purchase.credits,
-        amountCents: purchase.amountCents,
-        currency: purchase.currency
-    });
-
     const status = paymentStatus(remotePayment.status);
     const amountCents = Math.round(Number(remotePayment.transaction_amount) * 100);
     const currency = remotePayment.currency_id || 'BRL';
     
-    console.log(`[PAYMENT] Validando valores:`, {
-        remoteAmountCents: amountCents,
-        purchaseAmountCents: purchase.amountCents,
-        remoteCurrency: currency,
-        purchaseCurrency: purchase.currency,
-        match: amountCents === purchase.amountCents && currency === purchase.currency
-    });
-    
     if (amountCents !== purchase.amountCents || currency !== purchase.currency) {
         const error = new Error('Valor ou moeda do pagamento não conferem.');
         error.status = 400;
-        console.error(`[PAYMENT] Valores não conferem`, error);
+        console.error('[PAYMENT] Valores ou moeda não conferem.');
         throw error;
     }
 
@@ -114,7 +96,7 @@ async function processarPagamentoWebhook(paymentId) {
         if (existing && (existing.purchaseId !== purchase.id || existing.userId !== purchase.userId)) {
             const error = new Error('Pagamento associado a outra compra.');
             error.status = 409;
-            console.error(`[PAYMENT] Pagamento conflitante:`, existing);
+            console.error('[PAYMENT] Pagamento conflitante.');
             throw error;
         }
         const saved = existing
@@ -138,19 +120,19 @@ async function processarPagamentoWebhook(paymentId) {
         if (status !== 'UNKNOWN') {
             await tx.purchase.update({ where: { id: purchase.id }, data: { status } });
         }
-        console.log(`[PAYMENT] Payment ${existing ? 'atualizado' : 'criado'}:`, { id: saved.id, status: saved.status });
+        console.log(`[PAYMENT] Pagamento ${existing ? 'atualizado' : 'criado'}.`);
         return saved;
     });
 
     // Só processa concessão de créditos se status for APPROVED
     if (status === 'APPROVED') {
-        console.log(`[PAYMENT] Status APPROVED - verificando se créditos já foram concedidos para ${purchase.id}`);
+        console.log('[PAYMENT] Status aprovado. Verificando concessão de créditos.');
         const alreadyGranted = await prisma.creditLot.findUnique({ where: { purchaseId: purchase.id } });
         if (!alreadyGranted) {
-            console.log(`[PAYMENT] Créditos não concedidos ainda. Concedendo ${purchase.credits} créditos para userId ${purchase.userId}`);
+            console.log('[PAYMENT] Créditos ainda não concedidos. Concedendo créditos.');
             try {
                 await concederCreditos({ userId: purchase.userId, purchaseId: purchase.id, credits: purchase.credits });
-                console.info(`[PAYMENT] ✓ Pagamento ${payment.id} aprovado; ${purchase.credits} créditos concedidos para userId ${purchase.userId}`);
+                console.info('[PAYMENT] Pagamento aprovado e créditos concedidos.');
             } catch (error) {
                 console.error(`[PAYMENT] Erro ao conceder créditos:`, {
                     message: error.message,
@@ -162,11 +144,11 @@ async function processarPagamentoWebhook(paymentId) {
                 console.warn(`[PAYMENT] P2002 capturado (já existe), ignorando`);
             }
         } else {
-            console.log(`[PAYMENT] Créditos já foram concedidos anteriormente: ${alreadyGranted.id}`);
+            console.log('[PAYMENT] Créditos já foram concedidos anteriormente.');
         }
     } else if (['REFUNDED', 'CHARGEBACK', 'CANCELLED'].includes(status)) {
         await revogarCreditosCompra(purchase.id);
-        console.log(`[PAYMENT] Créditos restantes revogados para a compra ${purchase.id}`);
+        console.log('[PAYMENT] Créditos restantes revogados.');
     } else {
         console.log(`[PAYMENT] Status ${status} - créditos NÃO serão concedidos`);
     }

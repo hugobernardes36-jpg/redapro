@@ -56,7 +56,7 @@ router.post('/:id/corrigir', aiRateLimiterPerUser, aiRateLimiterPerIp, async (re
             return res.status(error.status).json({ erro: error.message, codigo: error.code });
         }
 
-        console.error(error);
+        console.error('Erro ao corrigir redação:', error.code || error.name || 'internal_error');
 
         return res.status(500).json({
             erro: 'Erro ao corrigir redação'

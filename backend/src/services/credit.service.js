@@ -146,10 +146,10 @@ async function reverterConsumo(consumptionId) {
 }
 
 async function concederCreditos({ userId, purchaseId, credits }) {
-    console.log(`[CREDIT] Iniciando concessão de créditos:`, { userId, purchaseId, credits });
+    console.log('[CREDIT] Iniciando concessão de créditos.');
     
     return prisma.$transaction(async (tx) => {
-        console.log(`[CREDIT] Criando CreditLot para userId ${userId} com ${credits} créditos`);
+        console.log('[CREDIT] Criando lote de créditos.');
         
         const lot = await tx.creditLot.create({
             data: {
@@ -160,7 +160,7 @@ async function concederCreditos({ userId, purchaseId, credits }) {
                 purchaseId,
             },
         });
-        console.log(`[CREDIT] CreditLot criado:`, { id: lot.id, userId, credits });
+        console.log('[CREDIT] Lote de créditos criado.');
 
         console.log(`[CREDIT] Criando CreditLedgerEntry para auditoria`);
         await tx.creditLedgerEntry.create({
@@ -173,15 +173,11 @@ async function concederCreditos({ userId, purchaseId, credits }) {
                 purchaseId,
             },
         });
-        console.log(`[CREDIT] ✓ CreditLedgerEntry criado - Transação concluída com sucesso`);
+        console.log('[CREDIT] Registro de créditos criado.');
 
         return lot;
     }).catch((error) => {
-        console.error(`[CREDIT] Erro ao conceder créditos:`, {
-            message: error.message,
-            code: error.code,
-            stack: error.stack
-        });
+        console.error('[CREDIT] Erro ao conceder créditos:', error.code || error.name || 'internal_error');
         throw error;
     });
 }

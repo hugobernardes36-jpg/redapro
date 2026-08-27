@@ -16,7 +16,7 @@ async function criarRedacaoAutorizada({ userId, tema, texto }) {
         data: { userId, tema, texto },
     });
 
-    console.log(`[SUBMISSION] Redação ${redacao.id} criada para userId ${userId}. Crédito será descontado apenas após triagens serem aprovadas.`);
+    console.log('[SUBMISSION] Redação criada. Crédito será descontado apenas após triagens serem aprovadas.');
 
     return { redacao, consumo: null };
 }
