@@ -21,7 +21,7 @@ export function LoginPage({ navigate }) {
 
     try {
       await login(form.email, form.password)
-      navigate('/nova-redacao')
+      navigate('/inicio')
     } catch (error) {
       setErro(error.message || 'Não foi possível entrar.')
     } finally {
