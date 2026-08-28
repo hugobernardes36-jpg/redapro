@@ -1,15 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Icon } from '../ui/Icon'
 import styles from './EssayEditor.module.css'
 
-export function EssayEditor({ onSubmit, initialTitle = '' }) {
+export function EssayEditor({ onSubmit, initialTitle = '', initialText = '' }) {
  const [title, setTitle] = useState(initialTitle)
- const [text, setText] = useState('')
+ const [text, setText] = useState(initialText)
  const words = useMemo(() => text.trim() ? text.trim().split(/\s+/).length : 0, [text])
-
- useEffect(() => {
-   setTitle(initialTitle)
- }, [initialTitle])
 
  return <div className={styles.wrapper}>
    <label className={styles.field}><span>Tema</span><input value={title} onChange={e=>setTitle(e.target.value)} /></label>

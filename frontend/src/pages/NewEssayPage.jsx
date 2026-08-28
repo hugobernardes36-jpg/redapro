@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { BackButton } from '../components/ui/BackButton'
 import { PageHeader } from '../components/ui/PageHeader'
 import { PageContainer } from '../components/ui/PageContainer'
 import { EssayEditor } from '../components/essay/EssayEditor'
 import { enviarRedacaoParaCorrecao } from '../services/redacoes'
+import { obterSaldoCreditos } from '../services/credits'
 import { getSafeBackPath } from '../utils/navigation'
 import { CreditPackages } from '../components/credits/CreditPackages'
 import styles from './NewEssayPage.module.css'
@@ -12,9 +13,19 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
   const [erro, setErro] = useState(null)
   const [enviando, setEnviando] = useState(false)
   const [semCreditos, setSemCreditos] = useState(false)
+  const [retomandoPagamento, setRetomandoPagamento] = useState(false)
+  const [rascunho, setRascunho] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('redapro:pending-essay')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
+  const retomadaIniciada = useRef(false)
   const initialTitle = new URLSearchParams(window.location.search).get('tema') || ''
 
-  const submit = async ({ title, text }) => {
+  const submit = useCallback(async ({ title, text }) => {
     setErro(null)
     setSemCreditos(false)
     setEnviando(true)
@@ -25,11 +36,15 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
       })
 
       setCorrectionResult(resultado)
+      sessionStorage.removeItem('redapro:pending-essay')
       window.dispatchEvent(new Event('credits:updated'))
       navigate(`/resultado/${resultado.redacaoId}`)
 
     } catch (err) {
       if (err.code === 'CREDITOS_INSUFICIENTES') {
+        const pendingEssay = { title, text }
+        sessionStorage.setItem('redapro:pending-essay', JSON.stringify(pendingEssay))
+        setRascunho(pendingEssay)
         setSemCreditos(true)
       } else {
         setErro(err.message)
@@ -37,7 +52,42 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
     } finally {
       setEnviando(false)
     }
-  }
+  }, [navigate, setCorrectionResult])
+
+  useEffect(() => {
+    const payment = new URLSearchParams(window.location.search).get('payment')
+    if (payment !== 'success' || !rascunho || retomadaIniciada.current) return
+
+    retomadaIniciada.current = true
+    let cancelled = false
+    setRetomandoPagamento(true)
+    setSemCreditos(false)
+
+    async function waitForConfirmedCredit() {
+      for (let attempt = 0; attempt < 15; attempt += 1) {
+        try {
+          const balance = await obterSaldoCreditos()
+          if (balance.totalAvailable > 0) {
+            if (!cancelled) await submit(rascunho)
+            return
+          }
+        } catch {
+          // A próxima consulta tenta novamente sem presumir que a compra foi aprovada.
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 2000))
+      }
+
+      if (!cancelled) {
+        setRetomandoPagamento(false)
+        setErro('O pagamento foi recebido, mas o crédito ainda está sendo confirmado. Tente enviar a redação novamente em instantes.')
+      }
+    }
+
+    waitForConfirmedCredit()
+    return () => {
+      cancelled = true
+    }
+  }, [rascunho, submit])
 
   return (
     <PageContainer>
@@ -57,14 +107,14 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
         <CreditPackages title="Você ficou sem correções" />
       )}
 
-      {enviando ? (
+      {retomandoPagamento || enviando ? (
         <div className={styles.loading}>
           <div className={styles.spinner} />
-          <h2>Analisando sua redação...</h2>
-          <p>A IA está avaliando seu texto nas 5 competências do ENEM. Isso pode levar alguns segundos.</p>
+          <h2>{retomandoPagamento ? 'Confirmando seu crédito...' : 'Analisando sua redação...'}</h2>
+          <p>{retomandoPagamento ? 'Estamos aguardando a confirmação segura do pagamento. Sua redação será enviada automaticamente.' : 'A IA está avaliando seu texto nas 5 competências do ENEM. Isso pode levar alguns segundos.'}</p>
         </div>
       ) : !semCreditos ? (
-        <EssayEditor onSubmit={submit} initialTitle={initialTitle} />
+        <EssayEditor onSubmit={submit} initialTitle={rascunho?.title || initialTitle} initialText={rascunho?.text || ''} />
       ) : null
       }
     </PageContainer>

@@ -99,6 +99,13 @@ export default function App() {
    }
  }, [isAuthenticated, loading, router])
 
+ useEffect(() => {
+   const payment = new URLSearchParams(window.location.search).get('payment')
+   if (!loading && isAuthenticated && router.path === '/inicio' && payment === 'success') {
+     router.replace('/nova-redacao?payment=success')
+   }
+ }, [isAuthenticated, loading, router])
+
  const handleLogout = async () => {
    await logout()
    router.navigate('/login')
