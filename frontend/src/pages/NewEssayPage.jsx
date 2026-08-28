@@ -25,6 +25,27 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
   const retomadaIniciada = useRef(false)
   const initialTitle = new URLSearchParams(window.location.search).get('tema') || ''
 
+  useEffect(() => {
+    if (!enviando) return undefined
+
+    let active = true
+    async function refreshBalanceWhileProcessing() {
+      try {
+        await obterSaldoCreditos()
+        if (active) window.dispatchEvent(new Event('credits:updated'))
+      } catch {
+        // A correção continua sob controle do backend mesmo se uma atualização visual falhar.
+      }
+    }
+
+    refreshBalanceWhileProcessing()
+    const interval = window.setInterval(refreshBalanceWhileProcessing, 1000)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+    }
+  }, [enviando])
+
   const submit = useCallback(async ({ title, text }) => {
     setErro(null)
     setSemCreditos(false)
@@ -41,12 +62,13 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
       navigate(`/resultado/${resultado.redacaoId}`)
 
     } catch (err) {
-      if (err.code === 'CREDITOS_INSUFICIENTES') {
+      if (err.code === 'CREDITOS_INSUFICIENTES' || err.status === 402) {
         const pendingEssay = { title, text }
         sessionStorage.setItem('redapro:pending-essay', JSON.stringify(pendingEssay))
         setRascunho(pendingEssay)
         setSemCreditos(true)
       } else {
+        setSemCreditos(false)
         setErro(err.message)
       }
     } finally {
@@ -89,6 +111,8 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
     }
   }, [rascunho, submit])
 
+  const mostrarPacotes = semCreditos && !enviando && !retomandoPagamento
+
   return (
     <PageContainer>
       <BackButton to={getSafeBackPath(window.location.pathname)} onClick={() => navigate(getSafeBackPath(window.location.pathname))} />
@@ -103,7 +127,7 @@ export function NewEssayPage({ navigate, setCorrectionResult }) {
       </div>
       {erro && <div className={styles.erro}>{erro}</div>}
 
-      {semCreditos && (
+      {mostrarPacotes && (
         <CreditPackages title="Você ficou sem correções" />
       )}
 
