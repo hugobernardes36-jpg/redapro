@@ -32,7 +32,9 @@ export function AuthProvider({ children }) {
 
     const data = await response.json().catch(() => ({}))
     if (!response.ok) {
-      throw new Error(data.erro || 'Não foi possível entrar.')
+      const error = new Error(data.erro || 'Não foi possível entrar.')
+      error.status = response.status
+      throw error
     }
 
     setUser(data.usuario || null)

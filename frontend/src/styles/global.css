@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
 
 :root {
-  --primary-50: #eef5ff;
-  --primary-100: #dfeeff;
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
   --primary-500: #315efb;
   --primary-600: #214fe8;
   --primary-700: #1c41c7;
 
-  --surface-50: #f4f7fb;
-  --surface-100: #edf2f8;
-  --surface-200: #dfe6f1;
+  --surface-50: #f5f8f7;
+  --surface-100: #edf3f1;
+  --surface-200: #dce7e3;
   --surface-white: #ffffff;
 
   --text-900: #0f172a;
@@ -24,10 +24,11 @@
   --warning-500: #f59e0b;
 
   --border-color: rgba(148, 163, 184, 0.22);
-  --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.08);
-  --shadow-card: 0 12px 28px rgba(15, 23, 42, 0.06);
+  --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.1);
+  --shadow-card: 0 10px 26px rgba(15, 23, 42, 0.06);
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Manrope', 'DM Sans', sans-serif;
 
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
@@ -60,7 +61,7 @@ html, body {
   padding: 0;
   font-family: var(--font-sans);
   background:
-    radial-gradient(circle at top left, rgba(49, 94, 251, 0.08), transparent 30%),
+    radial-gradient(circle at 12% 0%, rgba(49, 94, 251, 0.09), transparent 28%),
     linear-gradient(180deg, #f8fafc 0%, #f2f6fb 100%);
   color: var(--text-700);
   line-height: 1.5;
@@ -73,7 +74,7 @@ body {
   cursor: default;
 }
 
-* {
+*:not(input):not(textarea):not(select) {
   caret-color: transparent;
 }
 
@@ -155,7 +156,7 @@ img, svg {
 }
 
 :focus-visible {
-  outline: 2px solid var(--primary-500);
+  outline: 3px solid rgba(49, 94, 251, 0.35);
   outline-offset: 2px;
 }
 

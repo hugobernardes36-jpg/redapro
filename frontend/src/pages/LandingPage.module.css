@@ -410,11 +410,11 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: rgba(34, 197, 94, 0.1);
-  color: #166534;
+  background: rgba(49, 94, 251, 0.1);
+  color: #1c41c7;
   font-size: 0.9rem;
   font-weight: 700;
-  border: 1px solid rgba(34, 197, 94, 0.18);
+  border: 1px solid rgba(49, 94, 251, 0.18);
 }
 
 .resultBadgeIcon {
@@ -423,7 +423,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: rgba(34, 197, 94, 0.18);
+  background: rgba(49, 94, 251, 0.18);
   font-size: 0.72rem;
 }
 
@@ -686,3 +686,20 @@
     padding: 22px 20px;
   }
 }
+
+.page{background:radial-gradient(circle at 82% 10%,rgba(49,94,251,.12),transparent 24%),linear-gradient(180deg,#f3f7ff 0%,#fff 28%,#f6f8fc 100%)}
+.topbar{background:rgba(246,249,255,.82);border-bottom-color:rgba(148,163,184,.22)}
+.nav a{color:var(--text-700)}.nav a:hover{color:var(--primary-600)}
+.hero{min-height:680px}.hero h1,.sectionHeader h2,.finalCta h2{font-family:var(--font-display);color:var(--text-900)}
+.kicker,.eyebrow{background:rgba(49,94,251,.1);color:var(--primary-600)}
+.lead{color:var(--text-700)}
+.scoreCard{border-color:rgba(148,163,184,.22);background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(231,239,255,.95));box-shadow:0 26px 60px rgba(15,23,42,.12)}
+.scoreBreakdown div{background:rgba(49,94,251,.08)}.scoreBreakdown strong{color:var(--text-900)}
+.heroMeta li svg,.highlightItem svg{color:var(--primary-500)}
+.highlightItem,.comparisonCard,.pricingCard,.stepCard,.competenciaCard,.resultDemo{border-color:rgba(148,163,184,.22);box-shadow:var(--shadow-card)}
+.featuredCard{background:linear-gradient(135deg,rgba(49,94,251,.12),rgba(255,255,255,.92));border-color:rgba(49,94,251,.28)}
+.cardTag,.competenciaBadge{color:var(--primary-600);background-color:rgba(49,94,251,.09)}
+.stepNumber{background:rgba(49,94,251,.1);color:var(--primary-600)}
+.resultScore,.resultMeta strong{color:var(--primary-600)}.resultChip{background:rgba(49,94,251,.1);color:var(--primary-600)}.resultBar span{background:linear-gradient(90deg,var(--primary-600),#60a5fa)}
+.finalCta{border-color:rgba(49,94,251,.2);background:linear-gradient(135deg,rgba(49,94,251,.12),rgba(255,255,255,.95))}
+@media(max-width:560px){.topbar{position:relative}.topbar .container{padding:14px 0}.nav{overflow-x:auto;justify-content:flex-start;padding-bottom:2px;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.hero{padding-top:30px}.section{padding-top:58px}.resultSummary{align-items:flex-start;flex-wrap:wrap}.resultScoreWrap{margin-left:0}.resultBadge{width:100%}.resultMeta{grid-template-columns:auto 1fr}.resultMeta strong{grid-column:2}.resultMeta h4{font-size:1rem}}

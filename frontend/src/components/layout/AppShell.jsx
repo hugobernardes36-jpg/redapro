@@ -1,6 +1,6 @@
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
-import { BottomNav } from '../BottomNav'
+import { MobileNav } from './MobileNav'
 import styles from './AppShell.module.css'
 
 export function AppShell({ children, currentPath, navigate, onLogout }) {
@@ -11,7 +11,7 @@ export function AppShell({ children, currentPath, navigate, onLogout }) {
         <Sidebar currentPath={currentPath} navigate={navigate} onLogout={onLogout} />
         <main className={styles.main}>{children}</main>
       </div>
-      <BottomNav currentPath={currentPath} navigate={navigate} />
+      <MobileNav currentPath={currentPath} navigate={navigate} />
     </div>
   )
 }

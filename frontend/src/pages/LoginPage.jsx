@@ -7,6 +7,7 @@ export function LoginPage({ navigate }) {
   const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [erro, setErro] = useState('')
+  const [tipoErro, setTipoErro] = useState(null)
   const [enviando, setEnviando] = useState(false)
 
   const handleChange = (event) => {
@@ -17,6 +18,7 @@ export function LoginPage({ navigate }) {
   const handleSubmit = async (event) => {
     event.preventDefault()
     setErro('')
+    setTipoErro(null)
     setEnviando(true)
 
     try {
@@ -24,6 +26,7 @@ export function LoginPage({ navigate }) {
       navigate('/inicio')
     } catch (error) {
       setErro(error.message || 'Não foi possível entrar.')
+      setTipoErro(error.status === 403 ? 'email' : error.status === 401 ? 'credenciais' : null)
     } finally {
       setEnviando(false)
     }
@@ -61,8 +64,8 @@ export function LoginPage({ navigate }) {
             </label>
             <button type="submit" className={styles.submit} disabled={enviando}>{enviando ? 'Entrando...' : 'Entrar'}</button>
           </form>
-          <button type="button" className={styles.forgot} onClick={() => navigate('/esqueci-senha')}>Esqueci minha senha</button>
-          <button type="button" className={styles.forgot} onClick={() => navigate('/reenviar-verificacao')}>Reenviar confirmação de e-mail</button>
+          {tipoErro === 'credenciais' && <button type="button" className={styles.forgot} onClick={() => navigate('/esqueci-senha')}>Esqueci minha senha</button>}
+          {tipoErro === 'email' && <button type="button" className={styles.forgot} onClick={() => navigate('/reenviar-verificacao')}>Reenviar confirmação de e-mail</button>}
           <p className={styles.signup}>Ainda não tem conta? <button type="button" onClick={() => navigate('/cadastro')}>Crie uma agora</button></p>
         </div>
       </main>
