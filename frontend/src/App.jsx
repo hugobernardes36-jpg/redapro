@@ -140,7 +140,16 @@ export default function App() {
    return <LandingPage navigate={router.navigate} />
  }
 
- if (PUBLIC_ROUTES.has(router.path) && !['/redefinir-senha', '/verificar-email'].includes(router.path)) {
+ // Sempre exibidas "cruas" (sem o shell/sidebar do app), mesmo com uma sessão antiga ainda ativa,
+ // para não parecer que o usuário "caiu no dashboard" ao clicar no link do e-mail.
+ if (router.path === '/verificar-email') {
+   return <VerifyEmailPage navigate={router.navigate} />
+ }
+ if (router.path === '/redefinir-senha') {
+   return <ResetPasswordPage navigate={router.navigate} />
+ }
+
+ if (PUBLIC_ROUTES.has(router.path)) {
    return (
      <AppShell currentPath="/inicio" navigate={router.navigate} onLogout={handleLogout}>
        <DashboardPage navigate={router.navigate} onSelectEssay={setSelectedEssayId} />

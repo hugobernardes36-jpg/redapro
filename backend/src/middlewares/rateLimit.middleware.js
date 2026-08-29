@@ -32,6 +32,17 @@ const passwordResetRateLimiter = rateLimit({
     message: { erro: 'Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.' },
 });
 
+// Separado do limite de redefinição de senha: o token de verificação tem 64 chars aleatórios
+// (não é adivinhável), então um limite maior é seguro e evita bloquear o clique real do usuário
+// quando o e-mail é pré-carregado por scanners de link (Gmail/Outlook) ou o usuário reenvia o e-mail.
+const emailVerificationRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { erro: 'Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.' },
+});
+
 // Limita, por usuário autenticado, requisições aos endpoints que geram custo com a OpenAI
 // (criação e correção de redação), independentemente do IP de origem.
 const aiRateLimiterPerUser = rateLimit({
@@ -52,4 +63,4 @@ const aiRateLimiterPerIp = rateLimit({
     message: { erro: 'Muitas requisições. Aguarde alguns instantes antes de tentar novamente.' },
 });
 
-module.exports = { authRateLimiter, readRateLimiter, passwordResetRateLimiter, aiRateLimiterPerUser, aiRateLimiterPerIp };
+module.exports = { authRateLimiter, readRateLimiter, passwordResetRateLimiter, emailVerificationRateLimiter, aiRateLimiterPerUser, aiRateLimiterPerIp };
